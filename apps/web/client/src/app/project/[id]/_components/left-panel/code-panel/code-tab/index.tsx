@@ -1,7 +1,6 @@
 'use client';
 
 import { useEditorEngine } from '@/components/store/editor';
-import { hashContent } from '@/services/sync-engine/sync-engine';
 import { EditorView } from '@codemirror/view';
 import { useDirectory, useFile } from '@onlook/file-system/hooks';
 import { MessageContextType } from '@onlook/models';
@@ -14,7 +13,7 @@ import { FileTabs } from './file-tabs';
 import { CodeControls } from './header-controls';
 import { useCodeNavigation } from './hooks/use-code-navigation';
 import type { BinaryEditorFile, EditorFile, TextEditorFile } from './shared/types';
-import { isDirty } from './shared/utils';
+import { hashContent, isDirty } from './shared/utils';
 import { FileTree } from './sidebar/file-tree';
 
 // Keep the number of opened files below the soft limit to avoid performance issues
