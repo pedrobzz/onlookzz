@@ -1,12 +1,12 @@
-import { makeFunctionReference, type FunctionReference } from 'convex/server';
+import { makeFunctionReference, type DefaultFunctionArgs, type FunctionReference } from 'convex/server';
 
-type QueryRef<Args, Return> = FunctionReference<'query', 'public', Args, Return>;
-type MutationRef<Args, Return> = FunctionReference<'mutation', 'public', Args, Return>;
+type QueryRef<Args extends DefaultFunctionArgs, Return> = FunctionReference<'query', 'public', Args, Return>;
+type MutationRef<Args extends DefaultFunctionArgs, Return> = FunctionReference<'mutation', 'public', Args, Return>;
 
-const queryRef = <Args, Return>(name: string) =>
+const queryRef = <Args extends DefaultFunctionArgs, Return>(name: string) =>
   makeFunctionReference<'query', Args, Return>(name) as QueryRef<Args, Return>;
 
-const mutationRef = <Args, Return>(name: string) =>
+const mutationRef = <Args extends DefaultFunctionArgs, Return>(name: string) =>
   makeFunctionReference<'mutation', Args, Return>(name) as MutationRef<Args, Return>;
 
 export const convexApi = {
