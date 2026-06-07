@@ -82,7 +82,6 @@ export const FrameComponent = observer(
             const connectionRef = useRef<ReturnType<typeof connect> | null>(null);
             const [penpalChild, setPenpalChild] = useState<PenpalChildMethods | null>(null);
             const isSelected = editorEngine.frames.isSelected(frame.id);
-            const isActiveBranch = editorEngine.branches.activeBranch.id === frame.branchId;
 
             const setupPenpalConnection = () => {
                 try {
@@ -115,7 +114,7 @@ export const FrameComponent = observer(
                         messenger,
                         methods: {
                             getFrameId: () => frame.id,
-                            getBranchId: () => frame.branchId,
+                            getBranchId: () => editorEngine.projectId,
                             onWindowMutated: () => {
                                 editorEngine.frameEvent.handleWindowMutated();
                             },
@@ -161,7 +160,7 @@ export const FrameComponent = observer(
                             const remote = child as unknown as PenpalChildMethods;
                             setPenpalChild(remote);
                             remote.setFrameId(frame.id);
-                            remote.setBranchId(frame.branchId);
+                            remote.setBranchId(editorEngine.projectId);
                             remote.handleBodyReady();
                             remote.processDom();
 
@@ -313,9 +312,8 @@ export const FrameComponent = observer(
                         id={frame.id}
                         className={cn(
                             'outline outline-4 backdrop-blur-sm transition',
-                            isActiveBranch && 'outline-teal-400',
-                            isActiveBranch && !isSelected && 'outline-dashed',
-                            !isActiveBranch && isInDragSelection && 'outline-teal-500',
+                            isInDragSelection ? 'outline-teal-500' : 'outline-teal-400',
+                            !isSelected && 'outline-dashed',
                         )}
                         src={frame.url}
                         sandbox="allow-modals allow-forms allow-same-origin allow-scripts allow-popups allow-downloads"

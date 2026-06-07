@@ -2,11 +2,18 @@ import type { CodeFileSystem } from "@onlook/file-system";
 import type { EditorEngine } from "@onlook/web-client/src/components/store/editor/engine";
 import type { SandboxManager } from "@onlook/web-client/src/components/store/editor/sandbox";
 
-export async function getFileSystem(branchId: string, editorEngine: EditorEngine): Promise<CodeFileSystem> {
-    const fileSystem = editorEngine.branches.getBranchDataById(branchId)?.codeEditor;
-    if (!fileSystem) {
-        throw new Error(`Cannot get file system for branch ${branchId}: file system not found`);
+export function getProjectSandbox(projectId: string, editorEngine: EditorEngine): SandboxManager {
+    if (projectId !== editorEngine.projectId) {
+        throw new Error(`Project ${projectId} is not the active project`);
     }
+    return editorEngine.activeSandbox;
+}
+
+export async function getFileSystem(projectId: string, editorEngine: EditorEngine): Promise<CodeFileSystem> {
+    if (projectId !== editorEngine.projectId) {
+        throw new Error(`Cannot get file system for project ${projectId}: project is not active`);
+    }
+    const fileSystem = editorEngine.fileSystem;
     await fileSystem.initialize();
     return fileSystem;
 }
@@ -178,7 +185,7 @@ export async function findFuzzyPath(inputPath: string, sandbox: SandboxManager):
             const currentDirResult = await sandbox.readDir('.');
             if (currentDirResult) {
                 const candidates = currentDirResult
-                    .map((file: any) => file.name)
+                    .map((file) => file.name)
                     .filter((name: string) =>
                         name.includes(targetName) ||
                         name.toLowerCase().includes(targetName.toLowerCase())

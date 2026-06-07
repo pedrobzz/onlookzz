@@ -4,7 +4,6 @@ export { CheckErrorsTool } from './check-errors';
 export { FuzzyEditFileTool } from './fuzzy-edit-file';
 export { GlobTool } from './glob';
 export { GrepTool } from './grep';
-export { ListBranchesTool } from './list-branches';
 export { ListFilesTool } from './list-files';
 export { OnlookInstructionsTool } from './onlook-instructions';
 export { ReadFileTool } from './read-file';

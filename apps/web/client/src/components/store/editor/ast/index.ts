@@ -2,7 +2,6 @@ import type { JsxElementMetadata } from '@onlook/file-system';
 import type { LayerNode } from '@onlook/models';
 import { getTemplateNodeChild } from '@onlook/parser';
 import { makeAutoObservable } from 'mobx';
-import type { BranchData } from '../branch/manager';
 import type { EditorEngine } from '../engine';
 import { LayersManager } from './layers';
 
@@ -73,13 +72,7 @@ export class AstManager {
             return;
         }
 
-        const branchData = this.editorEngine.branches.getBranchDataById(frameData.frame.branchId);
-        if (!branchData) {
-            console.warn(`Failed to processNodeForMap: Branch data not found for branchId: ${frameData.frame.branchId}`);
-            return;
-        }
-
-        const metadata = await branchData.codeEditor.getJsxElementMetadata(node.oid);
+        const metadata = await this.editorEngine.fileSystem.getJsxElementMetadata(node.oid);
         if (!metadata) {
             console.warn('Failed to processNodeForMap: Metadata not found');
             return;
@@ -88,7 +81,7 @@ export class AstManager {
         // Check if node needs type assignment
         const hasSpecialType = metadata.dynamicType || metadata.coreElementType;
         if (!hasSpecialType) {
-            void this.findNodeInstance(frameId, node, node, metadata, branchData);
+            void this.findNodeInstance(frameId, node, node, metadata);
             return;
         }
 
@@ -106,7 +99,7 @@ export class AstManager {
             console.error('No frame view found');
         }
 
-        void this.findNodeInstance(frameId, node, node, metadata, branchData);
+        void this.findNodeInstance(frameId, node, node, metadata);
     }
 
     private async findNodeInstance(
@@ -114,7 +107,6 @@ export class AstManager {
         originalNode: LayerNode,
         node: LayerNode,
         metadata: JsxElementMetadata,
-        branchData: BranchData,
     ) {
         if (node.tagName.toLocaleLowerCase() === 'body') {
             return;
@@ -134,7 +126,7 @@ export class AstManager {
             console.warn('Failed to findNodeInstance: Parent has no oid');
             return;
         }
-        const parentMetadata = await branchData.codeEditor.getJsxElementMetadata(parent.oid);
+        const parentMetadata = await this.editorEngine.fileSystem.getJsxElementMetadata(parent.oid);
         if (!parentMetadata) {
             console.warn('Failed to findNodeInstance: Parent metadata not found');
             return;
@@ -183,7 +175,7 @@ export class AstManager {
                 );
             } else {
                 // Recursively look up parent to find the instance
-                await this.findNodeInstance(frameId, originalNode, parent, metadata, branchData);
+                await this.findNodeInstance(frameId, originalNode, parent, metadata);
             }
         }
     }

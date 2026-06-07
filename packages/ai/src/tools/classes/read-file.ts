@@ -3,7 +3,7 @@ import type { EditorEngine } from '@onlook/web-client/src/components/store/edito
 import { z } from 'zod';
 import { ClientTool } from '../models/client';
 import { getFileSystem } from '../shared/helpers/files';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
 
 export class ReadFileTool extends ClientTool {
     static readonly toolName = 'read_file';
@@ -27,7 +27,7 @@ export class ReadFileTool extends ClientTool {
             .describe(
                 'The number of lines to read. Only provide if the file is too large to read at once.',
             ),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.EyeOpen;
 
@@ -36,7 +36,7 @@ export class ReadFileTool extends ClientTool {
         lines: number;
     }> {
         try {
-            const fileSystem = await getFileSystem(args.branchId, editorEngine);
+            const fileSystem = await getFileSystem(args.projectId, editorEngine);
             let file = await fileSystem.readFile(args.file_path);
             if (typeof file !== 'string') {
                 throw new Error(`Cannot read file ${args.file_path}: file is not text`);

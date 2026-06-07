@@ -2,7 +2,6 @@ import { useEditorEngine } from '@/components/store/editor';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@onlook/ui/accordion';
 import { Button } from '@onlook/ui/button';
 import { Icons } from '@onlook/ui/icons/index';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@onlook/ui/select';
 import { Separator } from '@onlook/ui/separator';
 import { toast } from '@onlook/ui/sonner';
 import { observer } from 'mobx-react-lite';
@@ -14,9 +13,7 @@ export const Versions = observer(() => {
     const editorEngine = useEditorEngine();
     const [commitToRename, setCommitToRename] = useState<string | null>(null);
     const [isCreatingBackup, setIsCreatingBackup] = useState(false);
-    const selectedBranchId = editorEngine.branches.activeBranch.id;
-    const branchData = editorEngine.branches.getBranchDataById(selectedBranchId);
-    const gitManager = branchData?.sandbox.gitManager;
+    const gitManager = editorEngine.activeSandbox.gitManager;
     const commits = gitManager?.commits;
     const isLoadingCommits = gitManager?.isLoadingCommits;
 
@@ -94,23 +91,10 @@ export const Versions = observer(() => {
                     <Icons.LoadingSpinner className="h-4 w-4 animate-spin" />
                 )}
 
-                {/* Branch selector */}
-                <Select value={selectedBranchId} onValueChange={(value) => { editorEngine.branches.switchToBranch(value); }}>
-                    <SelectTrigger className="min-w-38 ml-auto">
-                        <SelectValue placeholder="Select branch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {editorEngine.branches.allBranches.map((branch) => (
-                            <SelectItem key={branch.id} value={branch.id}>
-                                {branch.name}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
                 {gitManager && (
                     <Button
                         variant="outline"
-                        className="bg-background-secondary rounded text-sm font-normal "
+                        className="bg-background-secondary rounded text-sm font-normal ml-auto"
                         onClick={handleNewBackup}
                         disabled={isLoadingCommits || isCreatingBackup}
                     >

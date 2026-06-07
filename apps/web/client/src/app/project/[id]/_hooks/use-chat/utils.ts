@@ -39,25 +39,18 @@ export async function createCheckpointsForAllBranches(
 ): Promise<GitMessageCheckpoint[]> {
     const checkpoints: GitMessageCheckpoint[] = [];
 
-    for (const branch of editorEngine.branches.allBranches) {
-        const branchData = editorEngine.branches.getBranchDataById(branch.id);
-        if (!branchData) {
-            continue;
-        }
+    const result = await editorEngine.activeSandbox.gitManager.createCommit(commitMessage);
 
-        const result = await branchData.sandbox.gitManager.createCommit(commitMessage);
-
-        if (result.success) {
-            const commits = branchData.sandbox.gitManager.commits;
-            const latestCommit = commits?.[0];
-            if (latestCommit) {
-                checkpoints.push({
-                    type: MessageCheckpointType.GIT,
-                    oid: latestCommit.oid,
-                    branchId: branch.id,
-                    createdAt: new Date(),
-                });
-            }
+    if (result.success) {
+        const commits = editorEngine.activeSandbox.gitManager.commits;
+        const latestCommit = commits?.[0];
+        if (latestCommit) {
+            checkpoints.push({
+                type: MessageCheckpointType.GIT,
+                oid: latestCommit.oid,
+                branchId: editorEngine.projectId,
+                createdAt: new Date(),
+            });
         }
     }
 

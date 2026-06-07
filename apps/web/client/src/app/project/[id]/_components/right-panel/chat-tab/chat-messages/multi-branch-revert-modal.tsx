@@ -138,8 +138,7 @@ export const MultiBranchRevertModal = ({
                                     )}
                                 >
                                     <span className="text-sm">
-                                        {editorEngine.branches.getBranchById(checkpoint.branchId)
-                                            ?.name ?? checkpoint.branchId}
+                                        {editorEngine.projectName}
                                     </span>
                                     {isSelected && <Icons.Check className="text-primary h-4 w-4" />}
                                 </button>

@@ -37,10 +37,6 @@ const CollapsibleCodeBlockComponent = ({
         return isOpen ? { height: 'auto', opacity: 1 } : { height: 0, opacity: 0 };
     };
 
-    const branch = branchId
-        ? editorEngine.branches.allBranches.find(b => b.id === branchId)
-        : editorEngine.branches.activeBranch;
-
     return (
         <div className="group relative my-3">
             <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -75,9 +71,9 @@ const CollapsibleCodeBlockComponent = ({
                                     )}
                                 >
                                     <span className="truncate flex-1 min-w-0">{getTruncatedFileName(path)}</span>
-                                    {branch && (
+                                    {branchId && (
                                         <span className="text-foreground-tertiary group-hover:text-foreground-secondary text-mini ml-0.5 flex-shrink-0 truncate max-w-24">
-                                            {' • '}{branch.name}
+                                            {' • '}{editorEngine.projectName}
                                         </span>
                                     )}
                                 </div>

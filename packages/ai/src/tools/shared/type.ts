@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-export const BRANCH_ID_SCHEMA = z
+export const PROJECT_ID_SCHEMA = z
     .string()
     .trim()
     .min(1)
-    .describe('Branch ID to run the command in. Only use the branch ID, not the branch name.');
+    .describe('Project ID to run the command in. Only use the project ID, not the project name.');

@@ -7,7 +7,7 @@ import { ClientTool } from '../models/client';
 
 export class CheckErrorsTool extends ClientTool {
     static readonly toolName = 'check_errors';
-    static readonly description = 'Check for terminal errors similar to chat errors. Lists all current terminal errors from all branches.'
+    static readonly description = 'Check for terminal errors similar to chat errors. Lists current terminal errors for the project.'
     static readonly parameters = z.object({});
     static readonly icon = Icons.MagnifyingGlass;
 
@@ -15,7 +15,7 @@ export class CheckErrorsTool extends ClientTool {
         _params: unknown,
         editorEngine: EditorEngine,
     ): Promise<CheckErrorsResult> {
-        const errors = editorEngine.branches.getAllErrors();
+        const errors = editorEngine.error.errors;
 
         if (errors.length === 0) {
             return {

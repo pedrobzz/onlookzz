@@ -7,7 +7,9 @@ import {
     buildShellExclusionPattern,
     filterExcludedPaths
 } from '../shared/helpers/cli';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { getProjectSandbox } from '../shared/helpers/files';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
+import type { SandboxManager } from '@onlook/web-client/src/components/store/editor/sandbox';
 
 interface GlobResult {
     success: boolean;
@@ -28,16 +30,13 @@ export class GlobTool extends ClientTool {
             .describe(
                 'The directory to search in. If not specified, the current working directory will be used. Must be a valid directory path if provided.',
             ),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.MagnifyingGlass;
 
     async handle(args: z.infer<typeof GlobTool.parameters>, editorEngine: EditorEngine): Promise<string> {
         try {
-            const sandbox = editorEngine.branches.getSandboxById(args.branchId);
-            if (!sandbox) {
-                return `Error: Sandbox not found for branch ID: ${args.branchId}`;
-            }
+            const sandbox = getProjectSandbox(args.projectId, editorEngine);
 
             const searchPath = args.path || '.';
             const pattern = args.pattern;
@@ -74,7 +73,7 @@ export class GlobTool extends ClientTool {
 }
 
 
-async function tryGlobApproaches(sandbox: any, searchPath: string, pattern: string): Promise<GlobResult> {
+async function tryGlobApproaches(sandbox: SandboxManager, searchPath: string, pattern: string): Promise<GlobResult> {
     // Phase 1: Try bash with extended globbing (best option)
     const bashResult = await tryBashGlob(sandbox, searchPath, pattern);
     if (bashResult.success && bashResult.output.trim()) {
@@ -94,7 +93,7 @@ async function tryGlobApproaches(sandbox: any, searchPath: string, pattern: stri
     return findResult;
 }
 
-async function tryBashGlob(sandbox: any, searchPath: string, pattern: string): Promise<GlobResult> {
+async function tryBashGlob(sandbox: SandboxManager, searchPath: string, pattern: string): Promise<GlobResult> {
     try {
         const fullPattern = buildFullPattern(searchPath, pattern);
         const exclusions = buildShellExclusionPattern();
@@ -117,7 +116,7 @@ async function tryBashGlob(sandbox: any, searchPath: string, pattern: string): P
     }
 }
 
-async function tryShGlob(sandbox: any, searchPath: string, pattern: string): Promise<GlobResult> {
+async function tryShGlob(sandbox: SandboxManager, searchPath: string, pattern: string): Promise<GlobResult> {
     try {
         const fullPattern = buildFullPattern(searchPath, pattern);
         const exclusions = buildShellExclusionPattern();
@@ -140,7 +139,7 @@ async function tryShGlob(sandbox: any, searchPath: string, pattern: string): Pro
     }
 }
 
-async function tryFindGlob(sandbox: any, searchPath: string, pattern: string): Promise<GlobResult> {
+async function tryFindGlob(sandbox: SandboxManager, searchPath: string, pattern: string): Promise<GlobResult> {
     try {
         let findCommand = `find "${searchPath}" -type f`;
 
@@ -197,7 +196,7 @@ function buildFullPattern(searchPath: string, pattern: string): string {
 }
 
 
-async function validateInputs(pattern: string, searchPath: string, sandbox: any): Promise<string | null> {
+async function validateInputs(pattern: string, searchPath: string, sandbox: SandboxManager): Promise<string | null> {
     // Basic pattern validation
     if (!pattern.trim()) {
         return 'Error: Pattern cannot be empty';

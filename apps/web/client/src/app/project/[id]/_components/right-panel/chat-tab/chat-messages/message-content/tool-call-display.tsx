@@ -74,7 +74,7 @@ const ToolCallDisplayComponent = ({
         const args = toolPart.input as z.infer<typeof WriteFileTool.parameters> | null;
         const filePath = args?.file_path;
         const codeContent = args?.content;
-        const branchId = args?.branchId;
+        const projectId = args?.projectId;
         if (!filePath || !codeContent) {
             return (
                 <ToolCallSimple
@@ -90,7 +90,7 @@ const ToolCallDisplayComponent = ({
                 messageId={messageId}
                 applied={applied}
                 isStream={isStream}
-                branchId={branchId}
+                branchId={projectId}
             />
         );
     }
@@ -99,7 +99,7 @@ const ToolCallDisplayComponent = ({
         const args = toolPart.input as z.infer<typeof FuzzyEditFileTool.parameters> | null;
         const filePath = args?.file_path;
         const codeContent = args?.content;
-        const branchId = args?.branchId;
+        const projectId = args?.projectId;
         if (!filePath || !codeContent) {
             return (
                 <ToolCallSimple
@@ -115,7 +115,7 @@ const ToolCallDisplayComponent = ({
                 messageId={messageId}
                 applied={applied}
                 isStream={isStream}
-                branchId={branchId}
+                branchId={projectId}
             />
         );
     }
@@ -124,7 +124,7 @@ const ToolCallDisplayComponent = ({
         const args = toolPart.input as z.infer<typeof SearchReplaceEditTool.parameters> | null;
         const filePath = args?.file_path;
         const codeContent = args?.new_string;
-        const branchId = args?.branchId;
+        const projectId = args?.projectId;
         if (!filePath || !codeContent) {
             return (
                 <ToolCallSimple
@@ -140,7 +140,7 @@ const ToolCallDisplayComponent = ({
                 messageId={messageId}
                 applied={applied}
                 isStream={isStream}
-                branchId={branchId}
+                branchId={projectId}
             />
         );
     }
@@ -149,7 +149,7 @@ const ToolCallDisplayComponent = ({
         const args = toolPart.input as z.infer<typeof SearchReplaceMultiEditFileTool.parameters> | null;
         const filePath = args?.file_path;
         const codeContent = args?.edits?.map((edit) => edit.new_string).join('\n...\n');
-        const branchId = args?.branchId;
+        const projectId = args?.projectId;
         if (!filePath || !codeContent) {
             return (
                 <ToolCallSimple
@@ -165,7 +165,7 @@ const ToolCallDisplayComponent = ({
                 messageId={messageId}
                 applied={applied}
                 isStream={isStream}
-                branchId={branchId}
+                branchId={projectId}
             />
         );
     }

@@ -2,7 +2,8 @@ import { Icons } from '@onlook/ui/icons';
 import type { EditorEngine } from '@onlook/web-client/src/components/store/editor/engine';
 import { z } from 'zod';
 import { ClientTool } from '../models/client';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { getProjectSandbox } from '../shared/helpers/files';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
 
 export class BashReadTool extends ClientTool {
     static readonly ALLOWED_BASH_READ_COMMANDS = z.enum([
@@ -41,7 +42,7 @@ export class BashReadTool extends ClientTool {
             .max(600000)
             .optional()
             .describe('Optional timeout in milliseconds (up to 600000ms / 10 minutes)'),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.EyeOpen;
 
@@ -51,14 +52,7 @@ export class BashReadTool extends ClientTool {
         error: string | null;
     }> {
         try {
-            const sandbox = editorEngine.branches.getSandboxById(args.branchId);
-            if (!sandbox) {
-                return {
-                    output: '',
-                    success: false,
-                    error: `Sandbox not found for branch ID: ${args.branchId}`
-                };
-            }
+            const sandbox = getProjectSandbox(args.projectId, editorEngine);
 
             // Use allowed commands from parameter or default to all enum values
             const readOnlyCommands = args.allowed_commands || BashReadTool.ALLOWED_BASH_READ_COMMANDS.options;
@@ -79,11 +73,11 @@ export class BashReadTool extends ClientTool {
                 success: result.success,
                 error: result.error
             };
-        } catch (error: any) {
+        } catch (error) {
             return {
                 output: '',
                 success: false,
-                error: error.message || error.toString()
+                error: error instanceof Error ? error.message : String(error)
             };
         }
     }

@@ -3,7 +3,7 @@ import type { EditorEngine } from '@onlook/web-client/src/components/store/edito
 import { z } from 'zod';
 import { ClientTool } from '../models/client';
 import { getFileSystem } from '../shared/helpers/files';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
 
 export class WriteFileTool extends ClientTool {
     static readonly toolName = 'write_file';
@@ -11,13 +11,13 @@ export class WriteFileTool extends ClientTool {
     static readonly parameters = z.object({
         file_path: z.string().describe('Path to the file to write'),
         content: z.string().describe('Content to write to the file'),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.FilePlus;
 
     async handle(args: z.infer<typeof WriteFileTool.parameters>, editorEngine: EditorEngine): Promise<string> {
         try {
-            const fileSystem = await getFileSystem(args.branchId, editorEngine);
+            const fileSystem = await getFileSystem(args.projectId, editorEngine);
             await fileSystem.writeFile(args.file_path, args.content);
             return `File ${args.file_path} written successfully`;
         } catch (error) {

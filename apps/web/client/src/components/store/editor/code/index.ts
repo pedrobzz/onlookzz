@@ -41,7 +41,7 @@ export class CodeManager {
             toast.error('Error writing requests', {
                 description: error instanceof Error ? error.message : 'Unknown error',
             });
-            this.editorEngine.branches.activeError.addCodeApplicationError(error instanceof Error ? error.message : 'Unknown error', action);
+            this.editorEngine.error.addCodeApplicationError(error instanceof Error ? error.message : 'Unknown error', action);
         }
     }
 
@@ -54,17 +54,7 @@ export class CodeManager {
                 throw new Error(`No request group found for file: ${diff.path}`);
             }
 
-            const firstRequest = Array.from(fileGroup.oidToRequest.values())[0];
-            if (!firstRequest) {
-                throw new Error(`No requests found in group for file: ${diff.path}`);
-            }
-
-            const branchData = this.editorEngine.branches.getBranchDataById(firstRequest.branchId);
-            if (!branchData) {
-                throw new Error(`Branch not found for ID: ${firstRequest.branchId}`);
-            }
-
-            await branchData.codeEditor.writeFile(diff.path, diff.generated);
+            await this.editorEngine.fileSystem.writeFile(diff.path, diff.generated);
         }
     }
 
@@ -99,14 +89,11 @@ export class CodeManager {
         const requestByFile: FileToRequests = new Map();
 
         for (const request of requests) {
-            const branchData = this.editorEngine.branches.getBranchDataById(request.branchId);
-            const codeEditor = branchData?.codeEditor || this.editorEngine.fileSystem;
-
-            const metadata = await codeEditor.getJsxElementMetadata(request.oid);
+            const metadata = await this.editorEngine.fileSystem.getJsxElementMetadata(request.oid);
             if (!metadata) {
                 throw new Error(`Metadata not found for oid: ${request.oid}`);
             }
-            const fileContent = await codeEditor.readFile(metadata.path);
+            const fileContent = await this.editorEngine.fileSystem.readFile(metadata.path);
             if (fileContent instanceof Uint8Array) {
                 throw new Error(`File is binary: ${metadata.path}`);
             }

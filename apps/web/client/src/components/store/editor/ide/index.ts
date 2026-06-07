@@ -15,21 +15,8 @@ export class IdeManager {
 
     async openCodeBlock(oid: string) {
         try {
-            // Get the current branch data
-            const activeBranchId = this.editorEngine.branches.activeBranch?.id;
-            if (!activeBranchId) {
-                console.warn('[IdeManager] No active branch found');
-                return;
-            }
-
-            const branchData = this.editorEngine.branches.getBranchDataById(activeBranchId);
-            if (!branchData) {
-                console.warn(`[IdeManager] No branch data found for branchId: ${activeBranchId}`);
-                return;
-            }
-
             // Get element metadata
-            const metadata = await branchData.codeEditor.getJsxElementMetadata(oid);
+            const metadata = await this.editorEngine.fileSystem.getJsxElementMetadata(oid);
             if (!metadata) {
                 console.warn(`[IdeManager] No metadata found for OID: ${oid}`);
                 return;

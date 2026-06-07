@@ -1,12 +1,10 @@
 import { makeAutoObservable } from 'mobx';
 
-import type { CodeFileSystem } from '@onlook/file-system';
-import { type Branch } from '@onlook/models';
+import { CodeFileSystem } from '@onlook/file-system';
 import type { PostHog } from 'posthog-js/react';
 import { ActionManager } from './action';
 import { ApiManager } from './api';
 import { AstManager } from './ast';
-import { BranchManager } from './branch';
 import { CanvasManager } from './canvas';
 import { ChatManager } from './chat';
 import { CodeManager } from './code';
@@ -22,30 +20,24 @@ import { InsertManager } from './insert';
 import { MoveManager } from './move';
 import { OverlayManager } from './overlay';
 import { PagesManager } from './pages';
-import { type SandboxManager } from './sandbox';
+import { SandboxManager } from './sandbox';
 import { ScreenshotManager } from './screenshot';
 import { SnapManager } from './snap';
 import { StateManager } from './state';
 import { StyleManager } from './style';
 import { TextEditingManager } from './text';
 import { ThemeManager } from './theme';
+import { ErrorManager } from './error';
+import { HistoryManager } from './history';
 
 export class EditorEngine {
     readonly projectId: string;
+    readonly projectName: string;
     readonly posthog: PostHog;
-    readonly branches: BranchManager = new BranchManager(this);
-
-    get activeSandbox(): SandboxManager {
-        return this.branches.activeSandbox;
-    }
-
-    get history() {
-        return this.branches.activeHistory;
-    }
-
-    get fileSystem(): CodeFileSystem {
-        return this.branches.activeCodeEditor;
-    }
+    readonly fileSystem: CodeFileSystem;
+    readonly error: ErrorManager;
+    readonly history: HistoryManager;
+    readonly activeSandbox: SandboxManager;
 
     readonly state: StateManager = new StateManager();
     readonly canvas: CanvasManager = new CanvasManager(this);
@@ -72,9 +64,14 @@ export class EditorEngine {
     readonly api: ApiManager = new ApiManager(this);
     readonly ide: IdeManager = new IdeManager(this);
 
-    constructor(projectId: string, posthog: PostHog) {
+    constructor(projectId: string, projectName: string, posthog: PostHog) {
         this.projectId = projectId;
+        this.projectName = projectName;
         this.posthog = posthog;
+        this.fileSystem = new CodeFileSystem(projectId);
+        this.error = new ErrorManager(projectId);
+        this.history = new HistoryManager(this);
+        this.activeSandbox = new SandboxManager(projectId, this.error, this.fileSystem);
         makeAutoObservable(this);
     }
 
@@ -86,9 +83,9 @@ export class EditorEngine {
         this.style.init();
     }
 
-    async initBranches(branches: Branch[]) {
-        await this.branches.initBranches(branches);
-        await this.branches.init();
+    async initProject() {
+        await this.fileSystem.initialize();
+        await this.activeSandbox.init();
     }
 
     clear() {
@@ -110,7 +107,10 @@ export class EditorEngine {
         this.pages.clear();
         this.chat.clear();
         this.code.clear();
-        this.branches.clear();
+        this.error.clear();
+        this.history.clear();
+        void this.fileSystem.cleanup();
+        this.activeSandbox.clear();
         this.frameEvent.clear();
         this.screenshot.clear();
         this.snap.hideSnapLines();

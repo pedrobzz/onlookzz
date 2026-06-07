@@ -32,7 +32,7 @@ const useCustomDomain = () => {
         try {
             await runPublish({
                 projectId: editorEngine.projectId,
-                sandboxId: editorEngine.branches.activeBranch.sandbox.id
+                sandboxId: editorEngine.projectId,
             });
         } catch (error) {
             console.error(error);

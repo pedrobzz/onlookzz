@@ -3,7 +3,7 @@ import type { EditorEngine } from '@onlook/web-client/src/components/store/edito
 import { z } from 'zod';
 import { ClientTool } from '../models/client';
 import { getFileSystem } from '../shared/helpers/files';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
 
 export class SearchReplaceEditTool extends ClientTool {
     static readonly toolName = 'search_replace_edit_file';
@@ -13,14 +13,14 @@ export class SearchReplaceEditTool extends ClientTool {
         old_string: z.string().describe('Text to replace'),
         new_string: z.string().describe('Replacement text'),
         replace_all: z.boolean().optional().default(false).describe('Replace all occurrences'),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.Pencil;
 
     async handle(args: z.infer<typeof SearchReplaceEditTool.parameters>, editorEngine: EditorEngine): Promise<string> {
         try {
 
-            const fileSystem = await getFileSystem(args.branchId, editorEngine);
+            const fileSystem = await getFileSystem(args.projectId, editorEngine);
             const file = await fileSystem.readFile(args.file_path);
             if (typeof file !== 'string') {
                 throw new Error(`Cannot read file ${args.file_path}: file is not text`);

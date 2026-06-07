@@ -1,35 +1,61 @@
-import { api } from '@/trpc/server';
+'use client';
+
+import { convexApi } from '@/convex/api';
+import type { Project } from '@onlook/models';
+import { Icons } from '@onlook/ui/icons';
+import { useQuery } from 'convex/react';
 import { Main } from './_components/main';
 import { ProjectProviders } from './providers';
 
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
-    const projectId = (await params).id;
-    if (!projectId) {
-        return <div>Invalid project ID</div>;
-    }
+type LocalProject = {
+    projectId: string;
+    name: string;
+    description?: string | null;
+    tags?: string[];
+    createdAt: number;
+    updatedAt: number;
+    previewStorageId?: string;
+    previewUrl?: string;
+    previewUpdatedAt?: number;
+};
 
-    try {
-        // Fetch required project data before initializing providers
-        const [project, branches] = await Promise.all([
-            api.project.get({ projectId }),
-            api.branch.getByProjectId({ projectId }),
-        ]);
+export default function Page({ params }: { params: { id: string } }) {
+    const projectRow = useQuery(convexApi.projects.get, { projectId: params.id }) as LocalProject | null | undefined;
 
-        if (!project) {
-            return <div>Project not found</div>;
-        }
-
+    if (projectRow === undefined) {
         return (
-            <ProjectProviders project={project} branches={branches}>
-                <Main />
-            </ProjectProviders>
-        );
-    } catch (error) {
-        console.error('Failed to load project data:', error);
-        return (
-            <div className="h-screen w-screen flex items-center justify-center">
-                <div>Failed to load project: {error instanceof Error ? error.message : 'Unknown error'}</div>
+            <div className="flex h-screen w-screen items-center justify-center gap-2">
+                <Icons.LoadingSpinner className="h-4 w-4 animate-spin" />
+                Loading project...
             </div>
         );
     }
+
+    if (!projectRow) {
+        return <div className="flex h-screen w-screen items-center justify-center">Project not found</div>;
+    }
+
+    const project: Project = {
+        id: projectRow.projectId,
+        name: projectRow.name,
+        metadata: {
+            createdAt: new Date(projectRow.createdAt),
+            updatedAt: new Date(projectRow.updatedAt),
+            previewImg: projectRow.previewUrl
+                ? {
+                    type: 'url',
+                    url: projectRow.previewUrl,
+                    updatedAt: projectRow.previewUpdatedAt ? new Date(projectRow.previewUpdatedAt) : null,
+                }
+                : null,
+            description: projectRow.description ?? null,
+            tags: projectRow.tags ?? [],
+        },
+    };
+
+    return (
+        <ProjectProviders project={project}>
+            <Main />
+        </ProjectProviders>
+    );
 }

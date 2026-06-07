@@ -3,7 +3,7 @@ import type { EditorEngine } from '@onlook/web-client/src/components/store/edito
 import { z } from 'zod';
 import { ClientTool } from '../models/client';
 import { getFileSystem } from '../shared/helpers/files';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
 
 export class FuzzyEditFileTool extends ClientTool {
     static readonly toolName = 'fuzzy_edit_file';
@@ -21,7 +21,7 @@ Make sure there's enough context for the other model to understand where the cha
             .describe(
                 'A single sentence instruction describing what you are going to do for the sketched edit. This is used to assist another model in applying the edit. Use the first person to describe what you are going to do. Use it to disambiguate uncertainty in the edit.',
             ),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.Pencil;
 
@@ -30,7 +30,7 @@ Make sure there's enough context for the other model to understand where the cha
         editorEngine: EditorEngine,
     ): Promise<string> {
 
-        const fileSystem = await getFileSystem(args.branchId, editorEngine);
+        const fileSystem = await getFileSystem(args.projectId, editorEngine);
         const originalFile = await fileSystem.readFile(args.file_path);
 
         if (typeof originalFile !== 'string') {

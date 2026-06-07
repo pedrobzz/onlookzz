@@ -205,16 +205,7 @@ export const ChatInput = observer(
                             return;
                         }
 
-                        // Load the actual image file content
-                        const branchData = editorEngine.branches.getBranchDataById(
-                            editorEngine.branches.activeBranch.id,
-                        );
-                        if (!branchData) {
-                            toast.error('Failed to get branch data');
-                            return;
-                        }
-
-                        const fileContent = await branchData.codeEditor.readFile(data.originPath);
+                        const fileContent = await editorEngine.fileSystem.readFile(data.originPath);
                         if (!fileContent) {
                             toast.error('Failed to load image file');
                             return;
@@ -227,7 +218,7 @@ export const ChatInput = observer(
                             type: MessageContextType.IMAGE,
                             source: 'local',
                             path: data.originPath,
-                            branchId: editorEngine.branches.activeBranch.id,
+                            branchId: editorEngine.projectId,
                             content: base64Content,
                             displayName: data.fileName,
                             mimeType: data.mimeType,

@@ -121,7 +121,6 @@ const UserMessageComponent = ({ onEditMessage, message }: UserMessageProps) => {
     };
 
     const handleRestoreLegacy = async () => {
-        // Legacy checkpoints without branchId will restore to the active branch
         const firstCheckpoint = gitCheckpoints[0];
         if (firstCheckpoint) {
             setIsRestoring(true);
@@ -130,13 +129,7 @@ const UserMessageComponent = ({ onEditMessage, message }: UserMessageProps) => {
         }
     };
 
-    const getBranchName = (branchId: string | undefined): string => {
-        if (!branchId) {
-            return editorEngine.branches.activeBranch.name;
-        }
-        const branch = editorEngine.branches.getBranchById(branchId);
-        return branch?.name || branchId;
-    };
+    const getCheckpointName = () => editorEngine.projectName;
 
     function renderEditingInput() {
         return (
@@ -295,13 +288,13 @@ const UserMessageComponent = ({ onEditMessage, message }: UserMessageProps) => {
                                         {isRestoring ? 'Restoring...' : 'Restore to here'}
                                     </TooltipContent>
                                     <DropdownMenuContent align="start" side="right">
-                                        <DropdownMenuLabel>Restore Branch</DropdownMenuLabel>
+                                        <DropdownMenuLabel>Restore Backup</DropdownMenuLabel>
                                         {gitCheckpoints.map((checkpoint) => (
                                             <DropdownMenuItem
                                                 key={checkpoint.branchId}
                                                 onClick={() => handleRestoreSingleBranch(checkpoint)}
                                             >
-                                                {getBranchName(checkpoint.branchId)}
+                                                {getCheckpointName()}
                                             </DropdownMenuItem>
                                         ))}
                                         {gitCheckpoints.length > 1 && (
@@ -310,7 +303,7 @@ const UserMessageComponent = ({ onEditMessage, message }: UserMessageProps) => {
                                                 <DropdownMenuItem
                                                     onClick={() => setIsMultiBranchModalOpen(true)}
                                                 >
-                                                    Select Multiple Branches...
+                                                    Select Multiple Backups...
                                                 </DropdownMenuItem>
                                             </>
                                         )}

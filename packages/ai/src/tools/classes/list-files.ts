@@ -2,8 +2,10 @@ import { Icons } from '@onlook/ui/icons';
 import type { EditorEngine } from '@onlook/web-client/src/components/store/editor/engine';
 import { z } from 'zod';
 import { ClientTool } from '../models/client';
-import { isCommandAvailable, resolveDirectoryPath, safeRunCommand } from '../shared/helpers/files';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { getProjectSandbox, isCommandAvailable, resolveDirectoryPath, safeRunCommand } from '../shared/helpers/files';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
+
+type ListFilesResult = { path: string; type: 'file' | 'directory'; size?: number; modified?: string };
 
 export class ListFilesTool extends ClientTool {
     static readonly toolName = 'list_files';
@@ -29,18 +31,15 @@ export class ListFilesTool extends ClientTool {
             .array(z.string())
             .optional()
             .describe('Array of glob patterns to ignore (e.g., ["node_modules", "*.log", ".git"])'),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.ListBullet;
 
     async handle(
         args: z.infer<typeof ListFilesTool.parameters>,
         editorEngine: EditorEngine,
-    ): Promise<{ path: string; type: 'file' | 'directory'; size?: number; modified?: string }[]> {
-        const sandbox = editorEngine.branches.getSandboxById(args.branchId);
-        if (!sandbox) {
-            throw new Error(`Sandbox not found for branch ID: ${args.branchId}`);
-        }
+    ): Promise<ListFilesResult[]> {
+        const sandbox = getProjectSandbox(args.projectId, editorEngine);
 
         try {
             // Resolve the directory path with fuzzy matching support
@@ -91,9 +90,9 @@ export class ListFilesTool extends ClientTool {
                 if (!fallbackResult) {
                     throw new Error(`Cannot list directory: ${resolvedPath}`);
                 }
-                return fallbackResult.map((file: any) => ({
+                return fallbackResult.map((file) => ({
                     path: file.name,
-                    type: file.type,
+                    type: file.isDirectory ? 'directory' as const : 'file' as const,
                 }));
             }
 
@@ -119,8 +118,8 @@ export class ListFilesTool extends ClientTool {
                         modified: modified || undefined
                     };
                 })
-                .filter((file: any) => file.path !== '.') // Remove the directory itself unless it's the only result
-                .sort((a: any, b: any) => {
+                .filter((file) => file.path !== '.') // Remove the directory itself unless it's the only result
+                .sort((a, b) => {
                     // Sort directories first, then files, then alphabetically
                     if (a.type !== b.type) {
                         return a.type === 'directory' ? -1 : 1;

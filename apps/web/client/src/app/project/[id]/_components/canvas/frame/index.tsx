@@ -19,7 +19,6 @@ const LOADING_MESSAGES = [
     'Initializing development environment...',
     'Tip: Use SHIFT+Click to add multiple elements on the canvas to your prompt',
     'If you have a large project, it may take a while...',
-    'Tip: Click the "Branch" icon to create a new version of your project on the canvas',
     'Preparing the visual editor...',
     'Tip: Double-click on an element to open it up in the code editor',
     'Hang in there... seems like a large project...',
@@ -57,8 +56,7 @@ export const FrameView = observer(({ frame, isInDragSelection = false }: { frame
     const { hasTimedOut, isConnecting } = useSandboxTimeout(frame, handleConnectionFailed);
 
     const isSelected = editorEngine.frames.isSelected(frame.id);
-    const branchData = editorEngine.branches.getBranchDataById(frame.branchId);
-    const preloadScriptReady = branchData?.sandbox?.preloadScriptState === PreloadScriptState.INJECTED;
+    const preloadScriptReady = editorEngine.activeSandbox.preloadScriptState === PreloadScriptState.INJECTED;
     const isFrameReady = preloadScriptReady && !(isConnecting && !hasTimedOut);
 
     useEffect(() => {

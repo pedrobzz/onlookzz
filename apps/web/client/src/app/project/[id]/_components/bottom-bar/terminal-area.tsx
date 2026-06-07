@@ -8,46 +8,29 @@ import { cn } from '@onlook/ui/utils';
 import { observer } from 'mobx-react-lite';
 import { motion } from 'motion/react';
 import { useState } from 'react';
+import type { TerminalSession } from '@/components/store/editor/sandbox/terminal';
 import { RestartSandboxButton } from './restart-sandbox-button';
 import { Terminal } from './terminal';
 
 export const TerminalArea = observer(({ children }: { children: React.ReactNode }) => {
     const editorEngine = useEditorEngine();
-    const branches = editorEngine.branches;
-
-    // Collect terminal sessions from all branches
-    const allTerminalSessions = new Map<string, { name: string; branchName: string; branchId: string; sessionId: string; session: any }>();
+    const sandbox = editorEngine.activeSandbox;
+    const allTerminalSessions = new Map<string, { name: string; sessionId: string; session: TerminalSession }>();
     let activeSessionId: string | null = null;
 
-    for (const branch of branches.allBranches) {
-        try {
-            const branchData = branches.getBranchById(branch.id);
-            if (!branchData) continue;
+    for (const [sessionId, session] of sandbox.session.terminalSessions) {
+        const key = `${editorEngine.projectId}-${sessionId}`;
+        allTerminalSessions.set(key, {
+            name: session.name,
+            sessionId,
+            session,
+        });
 
-            // Get the sandbox manager for this branch
-            const sandbox = branches.getSandboxById(branch.id);
-            if (!sandbox?.session?.terminalSessions) continue;
-
-            for (const [sessionId, session] of sandbox.session.terminalSessions) {
-                const key = `${branch.id}-${sessionId}`;
-                allTerminalSessions.set(key, {
-                    name: session.name,
-                    branchName: branch.name,
-                    branchId: branch.id,
-                    sessionId: sessionId,
-                    session: session
-                });
-
-                // Set active session if this is the currently active branch and session
-                if (branch.id === branches.activeBranch.id && sessionId === sandbox.session.activeTerminalSessionId) {
-                    activeSessionId = key;
-                }
-            }
-        } catch (error) {
-            // Skip branches that aren't properly initialized
-            continue;
+        if (sessionId === sandbox.session.activeTerminalSessionId) {
+            activeSessionId = key;
         }
     }
+    const selectedSessionId = activeSessionId ?? allTerminalSessions.keys().next().value ?? '';
 
     const [terminalHidden, setTerminalHidden] = useState(true);
 
@@ -107,17 +90,10 @@ export const TerminalArea = observer(({ children }: { children: React.ReactNode 
                 )}
             >
                 {allTerminalSessions.size > 0 ? (
-                    <Tabs defaultValue={'cli'} value={activeSessionId || ''} onValueChange={(value) => {
-                        // Extract branch and session from the combined key
+                    <Tabs defaultValue={selectedSessionId} value={selectedSessionId} onValueChange={(value) => {
                         const terminalData = allTerminalSessions.get(value);
                         if (terminalData) {
-                            // Switch to the branch first
-                            editorEngine.branches.switchToBranch(terminalData.branchId);
-                            // Then set the active terminal session for that branch
-                            const sandbox = branches.getSandboxById(terminalData.branchId);
-                            if (sandbox) {
-                                sandbox.session.activeTerminalSessionId = terminalData.sessionId;
-                            }
+                            sandbox.session.activeTerminalSessionId = terminalData.sessionId;
                         }
                     }}
                         className="w-full h-full">
@@ -125,7 +101,7 @@ export const TerminalArea = observer(({ children }: { children: React.ReactNode 
                             {Array.from(allTerminalSessions).map(([key, terminalData]) => (
                                 <TabsTrigger key={key} value={key} className="flex-1">
                                     <span className="truncate">
-                                        {terminalData.name} • {terminalData.branchName}
+                                        {terminalData.name}
                                     </span>
                                 </TabsTrigger>
                             ))}
@@ -133,7 +109,7 @@ export const TerminalArea = observer(({ children }: { children: React.ReactNode 
                         <div className="w-full h-full overflow-auto">
                             {Array.from(allTerminalSessions).map(([key, terminalData]) => (
                                 <TabsContent key={key} forceMount value={key} className="h-full" hidden={activeSessionId !== key}>
-                                    <Terminal hidden={terminalHidden} terminalSessionId={terminalData.sessionId} branchId={terminalData.branchId} />
+                                    <Terminal hidden={terminalHidden} terminalSessionId={terminalData.sessionId} />
                                 </TabsContent>
                             ))}
                         </div>

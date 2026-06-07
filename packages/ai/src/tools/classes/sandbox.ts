@@ -2,7 +2,8 @@ import { Icons } from '@onlook/ui/icons';
 import type { EditorEngine } from '@onlook/web-client/src/components/store/editor/engine';
 import { z } from 'zod';
 import { ClientTool } from '../models/client';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { getProjectSandbox } from '../shared/helpers/files';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
 
 export class SandboxTool extends ClientTool {
     static readonly ALLOWED_SANDBOX_COMMANDS = z.enum(['restart_dev_server', 'read_dev_server_logs']);
@@ -10,16 +11,13 @@ export class SandboxTool extends ClientTool {
     static readonly description = 'Execute commands in a sandboxed environment';
     static readonly parameters = z.object({
         command: SandboxTool.ALLOWED_SANDBOX_COMMANDS.describe('The allowed command to run'),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.Cube;
 
     async handle(args: z.infer<typeof SandboxTool.parameters>, editorEngine: EditorEngine): Promise<string> {
         try {
-            const sandbox = editorEngine.branches.getSandboxById(args.branchId);
-            if (!sandbox) {
-                throw new Error(`Sandbox not found for branch ID: ${args.branchId}`);
-            }
+            const sandbox = getProjectSandbox(args.projectId, editorEngine);
 
             if (args.command === 'restart_dev_server') {
                 const success = await sandbox.session.restartDevServer();

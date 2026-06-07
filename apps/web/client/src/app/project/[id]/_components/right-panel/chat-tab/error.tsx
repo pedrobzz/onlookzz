@@ -19,8 +19,8 @@ interface ErrorSectionProps {
 export const ErrorSection = observer(({ isStreaming, onSendMessage }: ErrorSectionProps) => {
     const editorEngine = useEditorEngine();
     const [isOpen, setIsOpen] = useState(false);
-    const allErrors = editorEngine.branches.getAllErrors();
-    const errorCount = editorEngine.branches.getTotalErrorCount();
+    const allErrors = editorEngine.error.errors;
+    const errorCount = allErrors.length;
 
     const sendFixError = () => {
         toast.promise(

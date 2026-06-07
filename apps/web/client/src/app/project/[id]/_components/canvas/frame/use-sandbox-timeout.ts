@@ -9,8 +9,7 @@ export function useSandboxTimeout(frame: Frame, onTimeout: () => void) {
     const editorEngine = useEditorEngine();
     const [hasTimedOut, setHasTimedOut] = useState(false);
 
-    const branchData = editorEngine.branches.getBranchDataById(frame.branchId);
-    const isConnecting = branchData?.sandbox?.session?.isConnecting ?? false;
+    const isConnecting = editorEngine.activeSandbox.session.isConnecting;
 
     useEffect(() => {
         if (!isConnecting) {
@@ -19,13 +18,12 @@ export function useSandboxTimeout(frame: Frame, onTimeout: () => void) {
         }
 
         const timeoutId = setTimeout(() => {
-            const currentBranchData = editorEngine.branches.getBranchDataById(frame.branchId);
-            const stillConnecting = currentBranchData?.sandbox?.session?.isConnecting ?? false;
+            const stillConnecting = editorEngine.activeSandbox.session.isConnecting;
 
             if (stillConnecting) {
                 console.log(`[Frame ${frame.id}] Sandbox connection timeout after ${SANDBOX_TIMEOUT_MS}ms`);
                 toast.info('Connection slow, retrying...', {
-                    description: `Reconnecting to ${currentBranchData?.branch?.name}...`,
+                    description: `Reconnecting to ${editorEngine.projectName}...`,
                 });
                 setHasTimedOut(true);
                 onTimeout();
@@ -33,7 +31,7 @@ export function useSandboxTimeout(frame: Frame, onTimeout: () => void) {
         }, SANDBOX_TIMEOUT_MS);
 
         return () => clearTimeout(timeoutId);
-    }, [isConnecting, frame.branchId, frame.id, onTimeout, editorEngine]);
+    }, [isConnecting, frame.id, onTimeout, editorEngine]);
 
     return { hasTimedOut, isConnecting };
 }

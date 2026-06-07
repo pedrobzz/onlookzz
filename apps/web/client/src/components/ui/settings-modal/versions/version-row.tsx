@@ -68,13 +68,7 @@ export const VersionRow = observer(
         };
 
         const updateCommitDisplayName = async (name: string) => {
-            const branchData = editorEngine.branches.activeBranchData;
-            if (!branchData) {
-                toast.error('No active branch');
-                return;
-            }
-
-            const result = await branchData.sandbox.gitManager.addCommitNote(commit.oid, name);
+            const result = await editorEngine.activeSandbox.gitManager.addCommitNote(commit.oid, name);
 
             if (!result.success) {
                 toast.error('Failed to rename backup');
@@ -121,7 +115,7 @@ export const VersionRow = observer(
                 const checkpoint = {
                     type: MessageCheckpointType.GIT,
                     oid: commit.oid,
-                    branchId: editorEngine.branches.activeBranch.id,
+                    branchId: editorEngine.projectId,
                     createdAt: new Date(),
                 };
 

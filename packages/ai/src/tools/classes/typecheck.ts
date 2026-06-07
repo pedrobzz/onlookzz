@@ -2,13 +2,14 @@ import { Icons } from '@onlook/ui/icons';
 import type { EditorEngine } from '@onlook/web-client/src/components/store/editor/engine';
 import { z } from 'zod';
 import { ClientTool } from '../models/client';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { getProjectSandbox } from '../shared/helpers/files';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
 
 export class TypecheckTool extends ClientTool {
     static readonly toolName = 'typecheck';
     static readonly description = 'Run TypeScript type checking. use to check after code edits, when type changes are suspected.';
     static readonly parameters = z.object({
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.MagnifyingGlass;
 
@@ -20,13 +21,7 @@ export class TypecheckTool extends ClientTool {
         error?: string;
     }> {
         try {
-            const sandbox = editorEngine.branches.getSandboxById(args.branchId);
-            if (!sandbox) {
-                return {
-                    success: false,
-                    error: `Sandbox not found for branch ID: ${args.branchId}`
-                };
-            }
+            const sandbox = getProjectSandbox(args.projectId, editorEngine);
 
             // Run Next.js typecheck command
             const result = await sandbox.session.runCommand('bunx tsc --noEmit');
@@ -41,10 +36,10 @@ export class TypecheckTool extends ClientTool {
                     error: result.error || result.output || 'Typecheck failed with unknown error'
                 };
             }
-        } catch (error: any) {
+        } catch (error) {
             return {
                 success: false,
-                error: error.message || error.toString()
+                error: error instanceof Error ? error.message : String(error)
             };
         }
     }

@@ -9,7 +9,8 @@ import { MessageContextType } from '@onlook/models';
 import { Icons } from '@onlook/ui/icons';
 
 import { ClientTool } from '../models/client';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { getProjectSandbox } from '../shared/helpers/files';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
 
 export class UploadImageTool extends ClientTool {
     static readonly toolName = 'upload_image';
@@ -29,7 +30,7 @@ export class UploadImageTool extends ClientTool {
             .describe(
                 'Custom filename (without extension). If not provided, a UUID will be generated',
             ),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.Image;
 
@@ -38,10 +39,7 @@ export class UploadImageTool extends ClientTool {
         editorEngine: EditorEngine,
     ): Promise<string> {
         try {
-            const sandbox = editorEngine.branches.getSandboxById(args.branchId);
-            if (!sandbox) {
-                throw new Error(`Sandbox not found for branch ID: ${args.branchId}`);
-            }
+            const sandbox = getProjectSandbox(args.projectId, editorEngine);
 
             // Get the current conversation ID
             const conversationId = editorEngine.chat.getCurrentConversationId();

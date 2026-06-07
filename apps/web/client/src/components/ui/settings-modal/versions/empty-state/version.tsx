@@ -12,13 +12,8 @@ export const NoVersions = observer(() => {
     const handleCreateBackup = async () => {
         try {
             setIsCreating(true);
-            const branchData = editorEngine.branches.activeBranchData;
 
-            if (!branchData) {
-                throw new Error('No active branch available to create backup');
-            }
-
-            const result = await branchData.sandbox.gitManager.createCommit('Initial commit');
+            const result = await editorEngine.activeSandbox.gitManager.createCommit('Initial commit');
             if (!result.success) {
                 throw new Error(result.error || 'Failed to create backup');
             }

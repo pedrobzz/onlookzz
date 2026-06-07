@@ -63,13 +63,7 @@ export function useCodeNavigation() {
                     }
 
                     try {
-                        const branchData = editorEngine.branches.getBranchDataById(selectedElement.branchId);
-                        if (!branchData) {
-                            console.warn(`[CodeNavigation] No branch data found for branchId: ${selectedElement.branchId}`);
-                            return;
-                        }
-
-                        const metadata = await branchData.codeEditor.getJsxElementMetadata(oid);
+                        const metadata = await editorEngine.fileSystem.getJsxElementMetadata(oid);
                         if (!metadata) {
                             console.warn(`[CodeNavigation] No metadata found for OID: ${oid}`);
                             return;

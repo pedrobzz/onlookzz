@@ -7,7 +7,9 @@ import {
     escapeForShell,
     getFileTypePattern
 } from '../shared/helpers/cli';
-import { BRANCH_ID_SCHEMA } from '../shared/type';
+import { getProjectSandbox } from '../shared/helpers/files';
+import { PROJECT_ID_SCHEMA } from '../shared/type';
+import type { SandboxManager } from '@onlook/web-client/src/components/store/editor/sandbox';
 
 interface GrepResult {
     success: boolean;
@@ -68,16 +70,13 @@ export class GrepTool extends ClientTool {
             .optional()
             .describe('Enable multiline mode where . matches newlines and patterns can span lines'),
         head_limit: z.number().optional().describe('Limit output to first N lines/entries'),
-        branchId: BRANCH_ID_SCHEMA,
+        projectId: PROJECT_ID_SCHEMA,
     });
     static readonly icon = Icons.MagnifyingGlass;
 
     async handle(args: z.infer<typeof GrepTool.parameters>, editorEngine: EditorEngine): Promise<string> {
         try {
-            const sandbox = editorEngine.branches.getSandboxById(args.branchId);
-            if (!sandbox) {
-                return `Error: Sandbox not found for branch ID: ${args.branchId}`;
-            }
+            const sandbox = getProjectSandbox(args.projectId, editorEngine);
 
             const searchPath = args.path || '.';
 
@@ -118,7 +117,7 @@ async function validateGrepInputs(
     pattern: string,
     searchPath: string,
     args: z.infer<typeof GrepTool.parameters>,
-    sandbox: any
+    sandbox: SandboxManager
 ): Promise<string | null> {
     // Pattern validation
     if (!pattern.trim()) {
@@ -202,7 +201,7 @@ function validateMultilinePattern(pattern: string): string | null {
     }
 }
 
-async function findFuzzyPath(inputPath: string, sandbox: any): Promise<string | null> {
+async function findFuzzyPath(inputPath: string, sandbox: SandboxManager): Promise<string | null> {
     // Extract directory name from path for fuzzy matching
     const parts = inputPath.split('/').filter(p => p);
     const targetName = parts[parts.length - 1];
@@ -231,15 +230,16 @@ async function findFuzzyPath(inputPath: string, sandbox: any): Promise<string | 
         });
 
         scored.sort((a: { path: string; score: number }, b: { path: string; score: number }) => b.score - a.score);
-        if (scored.length > 0 && scored[0].score > 0) {
-            return scored[0].path;
+        const bestMatch = scored[0];
+        if (bestMatch && bestMatch.score > 0) {
+            return bestMatch.path;
         }
     }
 
     return null;
 }
 
-async function executeGrepSearch(sandbox: any, searchPath: string, args: z.infer<typeof GrepTool.parameters>): Promise<GrepResult> {
+async function executeGrepSearch(sandbox: SandboxManager, searchPath: string, args: z.infer<typeof GrepTool.parameters>): Promise<GrepResult> {
     // Build find command for file filtering
     let findCommand = buildFindCommand(searchPath, args);
 
@@ -270,9 +270,9 @@ async function executeGrepSearch(sandbox: any, searchPath: string, args: z.infer
         false;
 
     return {
-        success: result.success || (result.output && result.output.trim().length > 0),
+        success: result.success || Boolean(result.output && result.output.trim().length > 0),
         output: result.output || '',
-        error: result.success ? undefined : result.error,
+        error: result.success ? undefined : result.error ?? undefined,
         isEmpty: !result.output || result.output.trim().length === 0,
         wasTruncated
     };
@@ -330,7 +330,7 @@ async function buildMultilineCommand(
     findCommand: string,
     grepFlags: string,
     args: z.infer<typeof GrepTool.parameters>,
-    sandbox: any
+    sandbox: SandboxManager
 ): Promise<string> {
     // Check if grep supports -P flag (Perl regex)
     const perlSupport = await sandbox.session.runCommand('grep --help | grep -q "\\-P" && echo "yes" || echo "no"', undefined, true);
