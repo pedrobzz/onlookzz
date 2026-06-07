@@ -1,14 +1,11 @@
 import { RuntimeClient } from '@onlook/file-system';
 import { makeAutoObservable } from 'mobx';
 import type { ErrorManager } from '../error';
-import type { TerminalSession } from './terminal';
 
 export class SessionManager {
     private readonly runtime: RuntimeClient;
     isConnecting = false;
     isReady = false;
-    terminalSessions = new Map<string, TerminalSession>();
-    activeTerminalSessionId = 'dev';
 
     constructor(
         private readonly projectId: string,
@@ -38,14 +35,6 @@ export class SessionManager {
 
     async readDevServerLogs(): Promise<string> {
         return (await this.runtime.getDevLogs()).join('\n');
-    }
-
-    getTerminalSession(id: string): TerminalSession | undefined {
-        return this.terminalSessions.get(id);
-    }
-
-    async disposeTerminal(id: string): Promise<void> {
-        this.terminalSessions.delete(id);
     }
 
     async reconnect(): Promise<void> {
@@ -83,7 +72,6 @@ export class SessionManager {
     }
 
     clear(): void {
-        this.terminalSessions.clear();
         this.isReady = false;
         this.isConnecting = false;
     }

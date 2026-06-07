@@ -987,49 +987,6 @@ async function updateMetadataInFile(
     await sandboxManager.writeFile(filePath, formattedContent);
 }
 
-export const addSetupTask = async (sandboxManager: SandboxManager) => {
-    const tasks = {
-        setupTasks: ['bun install'],
-        tasks: {
-            dev: {
-                name: 'Dev Server',
-                command: 'bun run dev',
-                preview: {
-                    port: 3000,
-                },
-                runAtStart: true,
-            },
-        },
-    };
-    const content = JSON.stringify(tasks, null, 2);
-    await sandboxManager.writeFile('./.codesandbox/tasks.json', content);
-};
-
-export const updatePackageJson = async (sandboxManager: SandboxManager) => {
-    const file = await sandboxManager.readFile('./package.json');
-    if (typeof file !== 'string') {
-        throw new Error('Package.json is not a text file');
-    }
-    const pkgJson = JSON.parse(file);
-
-    pkgJson.scripts = pkgJson.scripts || {};
-    pkgJson.scripts.dev = 'next dev';
-
-    await sandboxManager.writeFile('./package.json', JSON.stringify(pkgJson, null, 2));
-};
-
-export const parseRepoUrl = (repoUrl: string): { owner: string; repo: string } => {
-    const match = /github\.com\/([^/]+)\/([^/]+)(?:\.git)?/.exec(repoUrl);
-    if (!match?.[1] || !match[2]) {
-        throw new Error('Invalid GitHub URL');
-    }
-
-    return {
-        owner: match[1],
-        repo: match[2],
-    };
-};
-
 const getPageAndLayoutFiles = (entries: FileEntry[]) => {
     const pageFile = entries.find(
         (entry) =>

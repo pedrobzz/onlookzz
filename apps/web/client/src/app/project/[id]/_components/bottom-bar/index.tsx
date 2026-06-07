@@ -12,7 +12,7 @@ import { cn } from '@onlook/ui/utils';
 import { observer } from 'mobx-react-lite';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
-import { TerminalArea } from './terminal-area';
+import { RestartSandboxButton } from './restart-sandbox-button';
 
 const TOOLBAR_ITEMS = ({ t }: { t: ReturnType<typeof useTranslations> }) => [
     {
@@ -68,7 +68,7 @@ export const BottomBar = observer(() => {
                         opacity: shouldShow ? 1 : 0,
                         y: shouldShow ? 0 : 20,
                     }}
-                    className="flex flex-col border-[0.5px] border-border p-1 px-1 bg-background rounded-lg backdrop-blur drop-shadow-xl overflow-hidden"
+                    className="flex items-center gap-1 border-[0.5px] border-border p-1 px-1 bg-background rounded-lg backdrop-blur drop-shadow-xl overflow-hidden"
                     transition={{
                         type: 'spring',
                         bounce: 0.1,
@@ -81,42 +81,41 @@ export const BottomBar = observer(() => {
                         visibility: shouldShow ? 'visible' : 'hidden'
                     }}
                 >
-                    <TerminalArea>
-                        <ToggleGroup
-                            type="single"
-                            value={editorEngine.state.editorMode}
-                            onValueChange={(value) => {
-                                if (value) {
-                                    editorEngine.state.editorMode = value as EditorMode;
-                                }
-                            }}
-                            className="gap-0.5"
-                        >
-                            {toolbarItems.map((item) => (
-                                <Tooltip key={item.mode}>
-                                    <TooltipTrigger asChild>
-                                        <ToggleGroupItem
-                                            value={item.mode}
-                                            variant="default"
-                                            aria-label={item.hotkey.description}
-                                            disabled={item.disabled}
-                                            className={cn(
-                                                "h-9 w-9 flex items-center justify-center rounded-md border border-transparent transition-all duration-150 ease-in-out",
-                                                editorEngine.state.editorMode === item.mode
-                                                    ? "bg-background-tertiary/50 text-foreground-primary hover:text-foreground-primary"
-                                                    : "text-foreground-tertiary hover:text-foreground-hover hover:bg-background-tertiary/50"
-                                            )}
-                                        >
-                                            <item.icon />
-                                        </ToggleGroupItem>
-                                    </TooltipTrigger>
-                                    <TooltipContent sideOffset={5} hideArrow>
-                                        <HotkeyLabel hotkey={item.hotkey} />
-                                    </TooltipContent>
-                                </Tooltip>
-                            ))}
-                        </ToggleGroup>
-                    </TerminalArea>
+                    <ToggleGroup
+                        type="single"
+                        value={editorEngine.state.editorMode}
+                        onValueChange={(value) => {
+                            if (value) {
+                                editorEngine.state.editorMode = value as EditorMode;
+                            }
+                        }}
+                        className="gap-0.5"
+                    >
+                        {toolbarItems.map((item) => (
+                            <Tooltip key={item.mode}>
+                                <TooltipTrigger asChild>
+                                    <ToggleGroupItem
+                                        value={item.mode}
+                                        variant="default"
+                                        aria-label={item.hotkey.description}
+                                        disabled={item.disabled}
+                                        className={cn(
+                                            "h-9 w-9 flex items-center justify-center rounded-md border border-transparent transition-all duration-150 ease-in-out",
+                                            editorEngine.state.editorMode === item.mode
+                                                ? "bg-background-tertiary/50 text-foreground-primary hover:text-foreground-primary"
+                                                : "text-foreground-tertiary hover:text-foreground-hover hover:bg-background-tertiary/50"
+                                        )}
+                                    >
+                                        <item.icon />
+                                    </ToggleGroupItem>
+                                </TooltipTrigger>
+                                <TooltipContent sideOffset={5} hideArrow>
+                                    <HotkeyLabel hotkey={item.hotkey} />
+                                </TooltipContent>
+                            </Tooltip>
+                        ))}
+                    </ToggleGroup>
+                    <RestartSandboxButton />
                 </motion.div>
             </AnimatePresence>
         </div>

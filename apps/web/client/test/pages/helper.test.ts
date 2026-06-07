@@ -1,7 +1,12 @@
-import type { ReaddirEntry } from '@codesandbox/sdk';
 import { RouterType } from '@onlook/models';
 import { describe, expect, test, mock } from 'bun:test';
 import { scanAppDirectory } from '../../src/components/store/editor/pages/helper';
+
+type ReaddirEntry = {
+    name: string;
+    type: 'file' | 'directory';
+    isSymlink: boolean;
+};
 
 // Mock SandboxManager interface
 interface MockSandboxManager {
