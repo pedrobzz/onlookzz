@@ -21,13 +21,9 @@ export const FontFamilySelector = observer(() => {
         id: 'font-family-dropdown',
     });
 
-    // TODO: use file system like code tab
     useEffect(() => {
-        if (!editorEngine.activeSandbox.session.provider) {
-            return;
-        }
         editorEngine.font.init();
-    }, [editorEngine.activeSandbox.session.provider]);
+    }, [editorEngine.font]);
 
     const handleClose = () => {
         onOpenChange(false);

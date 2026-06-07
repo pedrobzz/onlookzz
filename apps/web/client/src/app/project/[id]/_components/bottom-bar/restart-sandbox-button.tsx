@@ -14,7 +14,7 @@ export const RestartSandboxButton = observer(({
     className?: string;
 }) => {
     const editorEngine = useEditorEngine();
-    const branches = editorEngine.branches;
+    const runtime = editorEngine.activeSandbox;
     const [restarting, setRestarting] = useState(false);
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
     const [hasSandboxError, setHasSandboxError] = useState(false);
@@ -23,21 +23,7 @@ export const RestartSandboxButton = observer(({
 
     // Extract error checking logic with proper dependencies
     const checkForError = useCallback(() => {
-        const activeBranch = branches.activeBranch;
-        if (!activeBranch) {
-            setHasSandboxError(false);
-            return false; // Stop checking
-        }
-
-        const branchData = branches.getBranchDataById(activeBranch.id);
-        const sandbox = branchData?.sandbox;
-
-        if (!sandbox?.session) {
-            setHasSandboxError(false);
-            return false; // Stop checking if no session
-        }
-
-        if (sandbox.session.provider) {
+        if (runtime.session.isReady) {
             setHasSandboxError(false);
         } else {
             // Only show error after initial grace period
@@ -48,7 +34,7 @@ export const RestartSandboxButton = observer(({
         }
 
         return true; // Continue checking
-    }, [branches]);
+    }, [runtime.session]);
 
     // TODO: iFrame should also detect 502 errors and set hasSandboxError to true
     useEffect(() => {
@@ -84,8 +70,6 @@ export const RestartSandboxButton = observer(({
             if (restarting) {
                 return;
             }
-            const activeBranch = branches.activeBranch;
-            if (!activeBranch) return;
             if (restarting) {
                 return;
             }
@@ -94,41 +78,28 @@ export const RestartSandboxButton = observer(({
             setHasSandboxError(false);
             // Reset mount time for grace period after restart
             mountTimeRef.current = Date.now();
-            const sandbox = branches.getSandboxById(activeBranch.id);
-            if (!sandbox?.session) {
-                toast.error('Sandbox session not available');
-                setRestarting(false);
-                return;
-            }
 
-            const success = await sandbox.session.restartDevServer();
+            const success = await runtime.session.restartDevServer();
             if (success) {
                 // Wait 5 seconds before refreshing webviews to avoid 502 errors
                 setTimeout(() => {
-                    const frames = editorEngine.frames.getByBranchId(activeBranch.id);
-                    frames.forEach(frame => {
-                        try {
-                            editorEngine.frames.reloadView(frame.frame.id);
-                        } catch (frameError) {
-                            console.error('Failed to reload frame:', frame.frame.id, frameError);
-                        }
-                    });
-                    toast.success('Sandbox restarted successfully', {
+                    editorEngine.frames.reloadAllViews();
+                    toast.success('Runtime restarted successfully', {
                         icon: <Icons.Cube className="h-4 w-4" />,
                     });
                     setRestarting(false);
                 }, 5000);
             } else {
-                toast.error('Failed to restart sandbox');
+                toast.error('Failed to restart runtime');
             }
         } catch (error) {
-            console.error('Error restarting sandbox:', error);
-            toast.error('An error occurred while restarting the sandbox');
+            console.error('Error restarting runtime:', error);
+            toast.error('An error occurred while restarting the runtime');
             setRestarting(false);
         }
     };
 
-    const disabled = !branches.activeBranch || restarting;
+    const disabled = restarting;
 
     return (
         <Tooltip>
@@ -158,7 +129,7 @@ export const RestartSandboxButton = observer(({
                     )}
                 </button>
             </TooltipTrigger>
-            <TooltipContent sideOffset={5} hideArrow>Restart Sandbox</TooltipContent>
+            <TooltipContent sideOffset={5} hideArrow>Restart Runtime</TooltipContent>
         </Tooltip>
     );
 });

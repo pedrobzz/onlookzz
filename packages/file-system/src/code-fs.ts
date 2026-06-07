@@ -234,7 +234,11 @@ export class CodeFileSystem extends FileSystem {
     async deleteFile(path: string): Promise<void> {
         const operationId = this.createOperationId();
         this.operationIds.add(operationId);
-        await super.deleteFile(path);
+        try {
+            await super.deleteFile(path);
+        } catch {
+            // The runtime is authoritative; the local cache may not have loaded this path.
+        }
         this.notifyWatchers({ type: 'delete', path });
 
         if (this.isJsxFile(path)) {
@@ -263,7 +267,11 @@ export class CodeFileSystem extends FileSystem {
     async moveFile(oldPath: string, newPath: string): Promise<void> {
         const operationId = this.createOperationId();
         this.operationIds.add(operationId);
-        await super.moveFile(oldPath, newPath);
+        try {
+            await super.moveFile(oldPath, newPath);
+        } catch {
+            // The runtime rename below will update disk; local cache can resync from SSE.
+        }
         this.notifyWatchers({ type: 'rename', path: newPath, oldPath });
 
         if (this.isJsxFile(oldPath) && this.isJsxFile(newPath)) {
@@ -302,6 +310,10 @@ export class CodeFileSystem extends FileSystem {
         }
     }
 
+    async copyFile(from: string, to: string): Promise<void> {
+        await this.writeFile(to, await this.readFile(from));
+    }
+
     async readDirectory(path = '/'): Promise<FileEntry[]> {
         const entries = await this.runtime.readTree(path);
         return entries.map(normalizeRuntimeEntry);
@@ -332,6 +344,11 @@ export class CodeFileSystem extends FileSystem {
 
         const regex = new RegExp(`^${patternToRegex(normalizedPattern)}$`);
         return files.filter((file) => regex.test(file));
+    }
+
+    async exists(path: string): Promise<boolean> {
+        const normalizedPath = normalizePath(path);
+        return (await this.listAll()).some((entry) => normalizePath(entry.path) === normalizedPath);
     }
 
     async deleteDirectory(path: string): Promise<void> {

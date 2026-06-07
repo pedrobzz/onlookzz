@@ -141,14 +141,17 @@ export class GitManager {
      */
     async getStatus(): Promise<GitStatus | null> {
         try {
-            const status = await this.sandbox.session.provider?.gitStatus({});
-            if (!status) {
-                console.error('Failed to get git status');
+            const status = await this.runCommand('git status --porcelain', true);
+            if (!status.success) {
+                console.error('Failed to get git status:', status.error);
                 return null;
             }
 
             return {
-                files: Object.keys(status.changedFiles || {}),
+                files: status.output
+                    .split('\n')
+                    .map((line) => line.slice(3).trim())
+                    .filter(Boolean),
             };
         } catch (error) {
             console.error('Failed to get git status:', error);

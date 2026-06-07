@@ -29,7 +29,6 @@ export const useStartProject = () => {
     const processedRequestIdRef = useRef<string | null>(null);
     const { tabState } = useTabActive();
     const apiUtils = api.useUtils();
-    const { data: user, error: userError } = api.user.get.useQuery();
     const { data: canvasWithFrames, error: canvasError } = api.userCanvas.getWithFrames.useQuery({ projectId: editorEngine.projectId });
     const { data: conversations, error: conversationsError } = api.chat.conversation.getAll.useQuery({ projectId: editorEngine.projectId });
     const { data: creationRequest, error: creationRequestError } = api.project.createRequest.getPendingRequest.useQuery({ projectId: editorEngine.projectId });
@@ -49,14 +48,14 @@ export const useStartProject = () => {
     };
 
     useEffect(() => {
-        if (!sandbox.session.isConnecting) {
+        if (!sandbox.session.isConnecting && sandbox.session.isReady) {
             updateProjectReadyState({ sandbox: true });
         }
-    }, [sandbox.session.isConnecting]);
+    }, [sandbox.session.isConnecting, sandbox.session.isReady]);
 
     useEffect(() => {
         if (tabState === 'reactivated') {
-            sandbox.session.reconnect(editorEngine.projectId, user?.id);
+            sandbox.session.reconnect();
         }
     }, [tabState, sandbox.session]);
 
@@ -146,8 +145,8 @@ export const useStartProject = () => {
 
 
     useEffect(() => {
-        setError(userError?.message ?? canvasError?.message ?? conversationsError?.message ?? creationRequestError?.message ?? null);
-    }, [userError, canvasError, conversationsError, creationRequestError]);
+        setError(canvasError?.message ?? conversationsError?.message ?? creationRequestError?.message ?? null);
+    }, [canvasError, conversationsError, creationRequestError]);
 
     return { isProjectReady: Object.values(projectReadyState).every((value) => value), error };
 }

@@ -126,6 +126,8 @@ const app = new Elysia()
       operationId: t.Optional(t.String()),
     }),
   })
+  .get('/projects/:id/commands/status', ({ params }) => getStatus(params.id, 'command'))
+  .get('/projects/:id/commands/logs', ({ params }) => getLogs(params.id, 'command'))
   .listen(port);
 
 console.log(`Onlook runtime listening on http://localhost:${app.server?.port ?? port}`);

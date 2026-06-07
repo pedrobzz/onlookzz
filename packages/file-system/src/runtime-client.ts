@@ -18,6 +18,19 @@ export type RuntimeFileEvent = FileChangeEvent & {
     source: 'api' | 'watcher' | 'process';
 };
 
+export type RuntimeStatus = 'idle' | 'running' | 'ready' | 'failed' | 'stopped';
+
+export type RuntimeProcessStatus = {
+    kind: 'install' | 'dev' | 'command' | 'build';
+    status: RuntimeStatus;
+    startedAt?: number;
+    endedAt?: number;
+    exitCode?: number | null;
+    command?: string;
+    previewPort?: number;
+    error?: string;
+};
+
 type RuntimeEventPayload = {
     type: string;
     path?: string;
@@ -106,6 +119,35 @@ export class RuntimeClient {
                 operationId,
             }),
         });
+    }
+
+    async restartDev(): Promise<RuntimeProcessStatus> {
+        return this.request<RuntimeProcessStatus>(`/projects/${this.projectId}/dev/restart`, {
+            method: 'POST',
+        });
+    }
+
+    async getDevStatus(): Promise<RuntimeProcessStatus> {
+        return this.request<RuntimeProcessStatus>(`/projects/${this.projectId}/dev/status`);
+    }
+
+    async getDevLogs(): Promise<string[]> {
+        return this.request<string[]>(`/projects/${this.projectId}/dev/logs`);
+    }
+
+    async runCommand(command: string, args: string[] = [], cwd = '.'): Promise<RuntimeProcessStatus> {
+        return this.request<RuntimeProcessStatus>(`/projects/${this.projectId}/commands/run`, {
+            method: 'POST',
+            body: JSON.stringify({ command, args, cwd }),
+        });
+    }
+
+    async getCommandStatus(): Promise<RuntimeProcessStatus> {
+        return this.request<RuntimeProcessStatus>(`/projects/${this.projectId}/commands/status`);
+    }
+
+    async getCommandLogs(): Promise<string[]> {
+        return this.request<string[]>(`/projects/${this.projectId}/commands/logs`);
     }
 
     subscribe(onEvent: (event: RuntimeFileEvent) => void): () => void {
