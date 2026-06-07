@@ -23,11 +23,8 @@ export const CodePanel = observer(() => {
                 minWidth={240}
                 maxWidth={1440}
             >
-                <CodeTab
-                    projectId={editorEngine.projectId}
-                    branchId={editorEngine.branches.activeBranch.id}
-                />
+                <CodeTab projectId={editorEngine.projectId} />
             </ResizablePanel>
         </div>
     );
-});  
+});

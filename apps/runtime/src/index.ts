@@ -1,8 +1,10 @@
+import { Buffer } from 'node:buffer';
+
 import { cors } from '@elysiajs/cors';
 import { Elysia, t } from 'elysia';
 
 import { encodeSse, eventBus } from './events';
-import { deletePath, ensureProjectRoot, listAll, readFile, readTree, renamePath, writeFile } from './files';
+import { createDirectory, deletePath, ensureProjectRoot, listAll, readFile, readTree, renamePath, writeFile } from './files';
 import { getLogs, getStatus, restartDev, runCommand, startDev, startInstall, stopProcess } from './processes';
 import { watchProject } from './watch';
 
@@ -37,12 +39,16 @@ const app = new Elysia()
   .post('/projects/:id/files/write', async ({ params, body }) => {
     await ensureProjectRoot(params.id);
     watchProject(params.id);
-    await writeFile(params.id, body.path, body.content, body.operationId);
+    const content = body.encoding === 'base64'
+      ? Uint8Array.from(Buffer.from(body.content, 'base64'))
+      : body.content;
+    await writeFile(params.id, body.path, content, body.operationId);
     return { ok: true };
   }, {
     body: t.Object({
       path: t.String(),
       content: t.String(),
+      encoding: t.Optional(t.Union([t.Literal('utf8'), t.Literal('base64')])),
       operationId: t.Optional(t.String()),
     }),
   })
@@ -57,6 +63,14 @@ const app = new Elysia()
       newPath: t.String(),
       operationId: t.Optional(t.String()),
     }),
+  })
+  .post('/projects/:id/files/directory', async ({ params, body }) => {
+    await ensureProjectRoot(params.id);
+    watchProject(params.id);
+    await createDirectory(params.id, body.path, body.operationId);
+    return { ok: true };
+  }, {
+    body: pathBody,
   })
   .post('/projects/:id/files/delete', async ({ params, body }) => {
     await deletePath(params.id, body.path, body.operationId);

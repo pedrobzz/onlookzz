@@ -4,14 +4,20 @@ import { useEffect, useState } from 'react';
 
 import { useFS } from './use-fs';
 
-export function useFile(projectId: string, branchId: string, path: string) {
-    const { fs, isInitializing, error: fsError } = useFS(projectId, branchId);
+export function useFile(projectId: string, path: string) {
+    const { fs, isInitializing, error: fsError } = useFS(projectId);
     const [content, setContent] = useState<string | Uint8Array<ArrayBufferLike> | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         if (!fs) return;
+        if (!path) {
+            setContent(null);
+            setError(null);
+            setIsLoading(false);
+            return;
+        }
 
         const loadFile = async () => {
             try {
@@ -34,8 +40,8 @@ export function useFile(projectId: string, branchId: string, path: string) {
     }, [fs, path]);
 
     useEffect(() => {
-        setIsLoading(true);
-    }, [projectId, branchId, path]);
+        setIsLoading(Boolean(path));
+    }, [projectId, path]);
 
     // Type guards are used below to ensure that the resultant type is correct
     if (isInitializing || isLoading) {

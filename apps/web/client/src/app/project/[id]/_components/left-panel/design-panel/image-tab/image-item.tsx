@@ -42,8 +42,8 @@ interface ImageItemProps {
     onAddToChat: (imagePath: string) => void;
 }
 
-export const ImageItem = ({ image, projectId, branchId, onImageDragStart, onImageDragEnd, onImageMouseDown, onImageMouseUp, onRename, onDelete, onAddToChat }: ImageItemProps) => {
-    const { content, loading } = useFile(projectId, branchId, image.path);
+export const ImageItem = ({ image, projectId, onImageDragStart, onImageDragEnd, onImageMouseDown, onImageMouseUp, onRename, onDelete, onAddToChat }: ImageItemProps) => {
+    const { content, loading } = useFile(projectId, image.path);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [isDisabled, setIsDisabled] = useState(false);
     const [isRenaming, setIsRenaming] = useState(false);

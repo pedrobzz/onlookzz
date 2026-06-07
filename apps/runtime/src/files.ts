@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { Buffer } from 'node:buffer';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -19,6 +20,22 @@ export async function hashFile(absolutePath: string): Promise<string | undefined
   } catch {
     return undefined;
   }
+}
+
+function isTextContent(buffer: Uint8Array): boolean {
+  const checkLength = Math.min(512, buffer.length);
+
+  for (let i = 0; i < checkLength; i++) {
+    const byte = buffer[i];
+    if (byte === 0 || byte === undefined) {
+      return false;
+    }
+    if (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export async function readTree(projectId: string, inputPath = '.'): Promise<FileEntry[]> {
@@ -98,20 +115,31 @@ export async function listAll(projectId: string): Promise<Array<{ path: string; 
   return paths;
 }
 
-export async function readFile(projectId: string, inputPath: string): Promise<{ content: string; hash?: string; modifiedTime: number }> {
+export async function readFile(projectId: string, inputPath: string): Promise<{ content: string; encoding: 'utf8' | 'base64'; hash?: string; modifiedTime: number }> {
   const absolutePath = resolveProjectPath(projectId, inputPath);
   const [content, stats] = await Promise.all([
-    fs.readFile(absolutePath, 'utf8'),
+    fs.readFile(absolutePath),
     fs.stat(absolutePath),
   ]);
+  const hash = createHash('sha256').update(content).digest('hex');
+  if (isTextContent(content)) {
+    return {
+      content: content.toString('utf8'),
+      encoding: 'utf8',
+      hash,
+      modifiedTime: stats.mtimeMs,
+    };
+  }
+
   return {
-    content,
-    hash: createHash('sha256').update(content).digest('hex'),
+    content: Buffer.from(content).toString('base64'),
+    encoding: 'base64',
+    hash,
     modifiedTime: stats.mtimeMs,
   };
 }
 
-export async function writeFile(projectId: string, inputPath: string, content: string, operationId?: string): Promise<void> {
+export async function writeFile(projectId: string, inputPath: string, content: string | Uint8Array, operationId?: string): Promise<void> {
   const absolutePath = resolveProjectPath(projectId, inputPath);
   await fs.mkdir(path.dirname(absolutePath), { recursive: true });
   await fs.writeFile(absolutePath, content);
@@ -130,6 +158,19 @@ export async function writeFile(projectId: string, inputPath: string, content: s
     type: 'tree:changed',
     projectId,
     path: '.',
+    operationId,
+    source: 'api',
+  });
+}
+
+export async function createDirectory(projectId: string, inputPath: string, operationId?: string): Promise<void> {
+  const absolutePath = resolveProjectPath(projectId, inputPath);
+  await fs.mkdir(absolutePath, { recursive: true });
+
+  eventBus.publish({
+    type: 'tree:changed',
+    projectId,
+    path: toProjectRelative(projectId, absolutePath),
     operationId,
     source: 'api',
   });

@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react';
 
 import { CodeFileSystem } from '../code-fs';
 
-export function useFS(projectId: string, branchId: string) {
+export function useFS(projectId: string) {
     const [fs, setFs] = useState<CodeFileSystem | null>(null);
     const [isInitializing, setIsInitializing] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        const fileSystem = new CodeFileSystem(projectId, branchId);
+        const fileSystem = new CodeFileSystem(projectId);
 
         fileSystem
             .initialize()
@@ -30,7 +30,7 @@ export function useFS(projectId: string, branchId: string) {
         return () => {
             fileSystem.cleanup();
         };
-    }, [projectId, branchId]);
+    }, [projectId]);
 
     // Type guards are used below to ensure that the resultant type is correct
     if (isInitializing) {

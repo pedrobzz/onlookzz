@@ -31,7 +31,6 @@ export interface CodeTabRef {
 
 interface CodeTabProps {
     projectId: string;
-    branchId: string;
 }
 
 const createEditorFile = async (filePath: string, content: string | Uint8Array): Promise<EditorFile> => {
@@ -57,7 +56,7 @@ const createEditorFile = async (filePath: string, content: string | Uint8Array):
     }
 }
 
-export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId, branchId }, ref) => {
+export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId }, ref) => {
     const editorEngine = useEditorEngine();
     const editorViewsRef = useRef<Map<string, EditorView>>(new Map());
     const navigationTarget = useCodeNavigation();
@@ -72,15 +71,16 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId, b
 
     // This is a workaround to allow code controls to access the hasUnsavedChanges state
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const branchData = editorEngine.branches.getBranchDataById(branchId);
+    const branchData = editorEngine.branches.activeBranchData;
+    const branchId = branchData.branch.id;
     const {
         entries: fileEntries,
         loading: filesLoading,
-    } = useDirectory(projectId, branchId, '/');
+    } = useDirectory(projectId, '/');
 
     const {
         content: loadedContent,
-    } = useFile(projectId, branchId, selectedFilePath || '');
+    } = useFile(projectId, selectedFilePath || '');
 
     // React to loadedContent changes - build local EditorFile and manage opened files
     useEffect(() => {

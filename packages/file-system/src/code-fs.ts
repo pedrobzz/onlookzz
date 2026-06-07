@@ -21,6 +21,8 @@ import {
     getOrLoadIndex,
     saveIndexToCache,
 } from './index-cache';
+import { RuntimeClient, type RuntimeFileEntry, type RuntimeFileEvent } from './runtime-client';
+import type { FileChangeEvent, FileEntry } from './types';
 
 export type { JsxElementMetadata } from './index-cache';
 
@@ -28,27 +30,66 @@ export interface CodeEditorOptions {
     routerType?: RouterType;
 }
 
+export type WriteState = 'dirty' | 'synced' | 'failed';
+
 export class CodeFileSystem extends FileSystem {
     private projectId: string;
-    private branchId: string;
     private options: Required<CodeEditorOptions>;
+    private runtime: RuntimeClient;
+    private runtimeUnsubscribe: (() => void) | null = null;
+    private operationIds = new Set<string>();
+    private writeStates = new Map<string, WriteState>();
+    private fileWatchers = new Map<string, Set<(event: FileChangeEvent) => void>>();
+    private directoryWatchers = new Map<string, Set<(event: FileChangeEvent) => void>>();
     private indexPath = `${ONLOOK_CACHE_DIRECTORY}/index.json`;
 
-    constructor(projectId: string, branchId: string, options: CodeEditorOptions = {}) {
-        super(`/${projectId}/${branchId}`);
+    constructor(projectId: string, options: CodeEditorOptions = {}) {
+        super(`/${projectId}`);
         this.projectId = projectId;
-        this.branchId = branchId;
+        this.runtime = new RuntimeClient(projectId);
         this.options = {
             routerType: options.routerType ?? RouterType.APP,
         };
     }
 
+    async initialize(): Promise<void> {
+        await super.initialize();
+        await this.hydrateFromRuntime();
+        this.runtimeUnsubscribe = this.runtime.subscribe((event) => {
+            void this.applyRuntimeEvent(event);
+        });
+    }
+
+    async readFile(path: string): Promise<string | Uint8Array> {
+        try {
+            return await super.readFile(path);
+        } catch {
+            const file = await this.runtime.readFile(path);
+            await super.writeFile(path, file.content);
+            return file.content;
+        }
+    }
+
     async writeFile(path: string, content: string | Uint8Array): Promise<void> {
+        const operationId = this.createOperationId();
+        let contentToWrite = content;
         if (this.isJsxFile(path) && typeof content === 'string') {
-            const processedContent = await this.processJsxFile(path, content);
-            await super.writeFile(path, processedContent);
-        } else {
-            await super.writeFile(path, content);
+            contentToWrite = await this.processJsxFile(path, content);
+        }
+
+        this.operationIds.add(operationId);
+        this.writeStates.set(path, 'dirty');
+        await super.writeFile(path, contentToWrite);
+        this.notifyWatchers({ type: 'update', path });
+
+        try {
+            await this.runtime.writeFile(path, contentToWrite, operationId);
+            this.writeStates.set(path, 'synced');
+        } catch (error) {
+            this.writeStates.set(path, 'failed');
+            throw error;
+        } finally {
+            this.operationIds.delete(operationId);
         }
     }
 
@@ -109,7 +150,7 @@ export class CodeFileSystem extends FileSystem {
         const templateNodeMap = createTemplateNodeMap({
             ast,
             filename: path,
-            branchId: this.branchId,
+            branchId: this.projectId,
         });
 
         for (const [oid, node] of templateNodeMap.entries()) {
@@ -161,7 +202,7 @@ export class CodeFileSystem extends FileSystem {
                             const templateNodeMap = createTemplateNodeMap({
                                 ast,
                                 filename: entry.path,
-                                branchId: this.branchId,
+                                branchId: this.projectId,
                             });
 
                             for (const [oid, node] of templateNodeMap.entries()) {
@@ -191,7 +232,10 @@ export class CodeFileSystem extends FileSystem {
     }
 
     async deleteFile(path: string): Promise<void> {
+        const operationId = this.createOperationId();
+        this.operationIds.add(operationId);
         await super.deleteFile(path);
+        this.notifyWatchers({ type: 'delete', path });
 
         if (this.isJsxFile(path)) {
             const index = await this.loadIndex();
@@ -208,10 +252,19 @@ export class CodeFileSystem extends FileSystem {
                 await this.saveIndex(index);
             }
         }
+
+        try {
+            await this.runtime.delete(path, operationId);
+        } finally {
+            this.operationIds.delete(operationId);
+        }
     }
 
     async moveFile(oldPath: string, newPath: string): Promise<void> {
+        const operationId = this.createOperationId();
+        this.operationIds.add(operationId);
         await super.moveFile(oldPath, newPath);
+        this.notifyWatchers({ type: 'rename', path: newPath, oldPath });
 
         if (this.isJsxFile(oldPath) && this.isJsxFile(newPath)) {
             const index = await this.loadIndex();
@@ -228,6 +281,166 @@ export class CodeFileSystem extends FileSystem {
                 await this.saveIndex(index);
             }
         }
+
+        try {
+            await this.runtime.rename(oldPath, newPath, operationId);
+        } finally {
+            this.operationIds.delete(operationId);
+        }
+    }
+
+    async createDirectory(path: string): Promise<void> {
+        const operationId = this.createOperationId();
+        this.operationIds.add(operationId);
+        await super.createDirectory(path);
+        this.notifyWatchers({ type: 'create', path });
+
+        try {
+            await this.runtime.createDirectory(path, operationId);
+        } finally {
+            this.operationIds.delete(operationId);
+        }
+    }
+
+    async readDirectory(path = '/'): Promise<FileEntry[]> {
+        const entries = await this.runtime.readTree(path);
+        return entries.map(normalizeRuntimeEntry);
+    }
+
+    async listAll(): Promise<Array<{ path: string; type: 'file' | 'directory' }>> {
+        return this.runtime.listAll();
+    }
+
+    async listFiles(pattern = '**/*'): Promise<string[]> {
+        const files = (await this.listAll())
+            .filter((entry) => entry.type === 'file')
+            .map((entry) => normalizePath(entry.path));
+        const normalizedPattern = normalizePath(pattern);
+
+        if (normalizedPattern === '**/*') {
+            return files;
+        }
+
+        if (normalizedPattern.endsWith('/**/*')) {
+            const directory = normalizedPattern.slice(0, -'/**/*'.length);
+            return files.filter((file) => isPathInside(directory, file));
+        }
+
+        if (!normalizedPattern.includes('*')) {
+            return files.filter((file) => file === normalizedPattern || isPathInside(normalizedPattern, file));
+        }
+
+        const regex = new RegExp(`^${patternToRegex(normalizedPattern)}$`);
+        return files.filter((file) => regex.test(file));
+    }
+
+    async deleteDirectory(path: string): Promise<void> {
+        await this.deleteFile(path);
+    }
+
+    async moveDirectory(from: string, to: string): Promise<void> {
+        await this.moveFile(from, to);
+    }
+
+    async copyDirectory(from: string, to: string): Promise<void> {
+        const normalizedFrom = normalizePath(from);
+        const normalizedTo = normalizePath(to);
+        const files = await this.listFiles(normalizedFrom === '.' ? '**/*' : `${normalizedFrom}/**/*`);
+
+        await Promise.all(files.map(async (filePath) => {
+            const content = await this.readFile(filePath);
+            const targetPath = normalizedFrom === '.'
+                ? `${normalizedTo}/${filePath}`
+                : filePath.replace(normalizedFrom, normalizedTo);
+            await this.writeFile(targetPath, content);
+        }));
+    }
+
+    watchFile(path: string, callback: (event: FileChangeEvent) => void) {
+        const watchers = this.fileWatchers.get(path) ?? new Set();
+        watchers.add(callback);
+        this.fileWatchers.set(path, watchers);
+        return () => {
+            watchers.delete(callback);
+            if (watchers.size === 0) {
+                this.fileWatchers.delete(path);
+            }
+        };
+    }
+
+    watchDirectory(path: string, callback: (event: FileChangeEvent) => void) {
+        const watchers = this.directoryWatchers.get(path) ?? new Set();
+        watchers.add(callback);
+        this.directoryWatchers.set(path, watchers);
+        return () => {
+            watchers.delete(callback);
+            if (watchers.size === 0) {
+                this.directoryWatchers.delete(path);
+            }
+        };
+    }
+
+    getWriteState(path: string): WriteState | undefined {
+        return this.writeStates.get(path);
+    }
+
+    private async hydrateFromRuntime(): Promise<void> {
+        await this.runtime.health();
+    }
+
+    private async applyRuntimeEvent(event: RuntimeFileEvent): Promise<void> {
+        if (event.operationId && this.operationIds.has(event.operationId)) {
+            return;
+        }
+
+        if (event.type === 'delete') {
+            try {
+                await super.deleteFile(event.path);
+            } catch {
+                // Local cache may not have loaded this path yet.
+            }
+            this.notifyWatchers(event);
+            return;
+        }
+
+        if (event.type === 'rename' && event.oldPath) {
+            try {
+                await super.moveFile(event.oldPath, event.path);
+            } catch {
+                await this.syncPathFromRuntime(event.path);
+            }
+            this.notifyWatchers(event);
+            return;
+        }
+
+        if (event.path !== '.') {
+            await this.syncPathFromRuntime(event.path);
+        }
+        this.notifyWatchers(event);
+    }
+
+    private async syncPathFromRuntime(path: string): Promise<void> {
+        try {
+            const file = await this.runtime.readFile(path);
+            await super.writeFile(path, file.content);
+            this.writeStates.set(path, 'synced');
+        } catch {
+            // Directory-level events do not map to readable files.
+        }
+    }
+
+    private notifyWatchers(event: FileChangeEvent): void {
+        this.fileWatchers.get(event.path)?.forEach((callback) => callback(event));
+
+        for (const [directory, callbacks] of this.directoryWatchers.entries()) {
+            if (isPathInside(directory, event.path) || (event.oldPath && isPathInside(directory, event.oldPath))) {
+                callbacks.forEach((callback) => callback(event));
+            }
+        }
+    }
+
+    private createOperationId(): string {
+        return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
     }
 
     private async loadIndex(): Promise<Record<string, JsxElementMetadata>> {
@@ -251,7 +464,7 @@ export class CodeFileSystem extends FileSystem {
         }
     }
 
-    private debouncedSaveIndexToFile = debounce(this.undobounceSaveIndexToFile, 1000);
+    private debouncedSaveIndexToFile = debounce(() => void this.undobounceSaveIndexToFile(), 1000);
 
     private isJsxFile(path: string): boolean {
         // Exclude the onlook preload script from JSX processing
@@ -267,10 +480,45 @@ export class CodeFileSystem extends FileSystem {
             await this.undobounceSaveIndexToFile();
         }
 
+        this.runtimeUnsubscribe?.();
+        this.runtimeUnsubscribe = null;
+        this.fileWatchers.clear();
+        this.directoryWatchers.clear();
+        super.cleanup();
         clearIndexCache(cacheKey);
     }
 
     private getCacheKey(): string {
-        return `${this.projectId}/${this.branchId}`;
+        return this.projectId;
     }
+}
+
+function normalizeRuntimeEntry(entry: RuntimeFileEntry): FileEntry {
+    return {
+        ...entry,
+        modifiedTime: typeof entry.modifiedTime === 'number' ? new Date(entry.modifiedTime) : undefined,
+        children: entry.children?.map(normalizeRuntimeEntry),
+    };
+}
+
+function isPathInside(directory: string, filePath: string): boolean {
+    const normalizedDirectory = normalizePath(directory);
+    const normalizedFilePath = normalizePath(filePath);
+
+    if (normalizedDirectory === '.' || normalizedDirectory === '') {
+        return true;
+    }
+    return normalizedFilePath === normalizedDirectory || normalizedFilePath.startsWith(`${normalizedDirectory}/`);
+}
+
+function normalizePath(path: string): string {
+    return path.replace(/^\/+/, '').replace(/\/+$/, '') || '.';
+}
+
+function patternToRegex(pattern: string): string {
+    return pattern
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*/g, '__DOUBLE_STAR__')
+        .replace(/\*/g, '[^/]*')
+        .replace(/__DOUBLE_STAR__/g, '.*');
 }

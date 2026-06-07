@@ -24,7 +24,7 @@ export function projectRoot(projectId: string): string {
 
 export function resolveProjectPath(projectId: string, inputPath = '.'): string {
   const root = projectRoot(projectId);
-  const normalizedInput = inputPath.trim() === '' ? '.' : inputPath;
+  const normalizedInput = normalizeProjectInput(inputPath);
   const resolved = path.resolve(root, normalizedInput);
 
   if (resolved !== root && !resolved.startsWith(`${root}${path.sep}`)) {
@@ -32,6 +32,14 @@ export function resolveProjectPath(projectId: string, inputPath = '.'): string {
   }
 
   return resolved;
+}
+
+function normalizeProjectInput(inputPath: string): string {
+  const trimmed = inputPath.trim();
+  if (trimmed === '' || trimmed === '/' || trimmed === '.') {
+    return '.';
+  }
+  return trimmed.replace(/^\/+/, '');
 }
 
 export function toProjectRelative(projectId: string, absolutePath: string): string {

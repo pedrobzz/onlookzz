@@ -128,7 +128,7 @@ export class BranchManager {
     }
 
     private createBranchData(branch: Branch, routerType?: RouterType): BranchData {
-        const codeEditorApi = new CodeFileSystem(this.editorEngine.projectId, branch.id, { routerType });
+        const codeEditorApi = new CodeFileSystem(this.editorEngine.projectId, { routerType });
         const errorManager = new ErrorManager(branch);
         const sandboxManager = new SandboxManager(branch, this.editorEngine, errorManager, codeEditorApi);
         const historyManager = new HistoryManager(this.editorEngine);
