@@ -1,5 +1,4 @@
 import { useEditorEngine } from '@/components/store/editor';
-import { api } from '@/trpc/react';
 import { DefaultSettings } from '@onlook/constants';
 import { type PageMetadata } from '@onlook/models';
 import { Icons } from '@onlook/ui/icons';
@@ -12,8 +11,7 @@ import { useMetadataForm } from './use-metadata-form';
 
 export const SiteTab = observer(() => {
     const editorEngine = useEditorEngine();
-    const { data: domains } = api.domain.getAll.useQuery({ projectId: editorEngine.projectId });
-    const baseUrl = domains?.published?.url ?? domains?.preview?.url;
+    const baseUrl = editorEngine.frames.selected[0]?.frame.url ?? editorEngine.frames.getAll()[0]?.frame.url;
 
     const homePage = useMemo(() => {
         return editorEngine.pages.tree.find((page) => page.path === '/');

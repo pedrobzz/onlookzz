@@ -1,5 +1,5 @@
 import { useEditorEngine } from '@/components/store/editor';
-import { api } from '@/trpc/react';
+import { useChatSettings } from '@/hooks/use-convex-settings';
 import { EditorMode } from '@onlook/models';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
@@ -9,7 +9,7 @@ import { DEFAULT_INPUT_STATE } from './helpers';
 
 export const OverlayButtons = observer(() => {
     const editorEngine = useEditorEngine();
-    const { data: settings } = api.user.settings.get.useQuery();
+    const { settings } = useChatSettings();
     const [inputState, setInputState] = useState(DEFAULT_INPUT_STATE);
     const prevChatPositionRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -21,7 +21,7 @@ export const OverlayButtons = observer(() => {
         !selectedRect ||
         isPreviewMode ||
         editorEngine.chat.isStreaming ||
-        !settings?.chat?.showMiniChat;
+        !settings.showMiniChat;
 
     useEffect(() => {
         setInputState(DEFAULT_INPUT_STATE);

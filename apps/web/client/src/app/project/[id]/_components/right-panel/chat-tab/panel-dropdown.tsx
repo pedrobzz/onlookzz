@@ -1,6 +1,5 @@
-import { useEditorEngine } from '@/components/store/editor';
+import { useChatSettings } from '@/hooks/use-convex-settings';
 import { transKeys } from '@/i18n/keys';
-import { api } from '@/trpc/react';
 import type { ChatSettings } from '@onlook/models';
 import {
     DropdownMenu,
@@ -11,10 +10,9 @@ import {
 } from '@onlook/ui/dropdown-menu';
 import { Icons } from '@onlook/ui/icons';
 import { cn } from '@onlook/ui/utils';
-import { debounce } from 'lodash';
 import { observer } from 'mobx-react-lite';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback } from 'react';
 
 export const ChatPanelDropdown = observer(({
     children,
@@ -26,46 +24,12 @@ export const ChatPanelDropdown = observer(({
     setIsChatHistoryOpen: (isOpen: boolean) => void;
 }) => {
     const t = useTranslations();
-    const { mutate: updateSettings } = api.user.settings.upsert.useMutation({
-        onSuccess: () => {
-            void apiUtils.user.settings.get.invalidate();
-        },
-    });
-    const { data: userSettings } = api.user.settings.get.useQuery();
-    const apiUtils = api.useUtils();
-    const editorEngine = useEditorEngine();
-
-    const debouncedUpdateSettings = useMemo(
-        () => debounce((settings: Partial<ChatSettings>) => {
-            updateSettings({
-                ...settings,
-            });
-        }, 300),
-        [updateSettings]
-    );
-
-    useEffect(() => {
-        return () => {
-            debouncedUpdateSettings.cancel();
-        };
-    }, [debouncedUpdateSettings]);
+    const { settings: chatSettings, update: updateChatSettingsValue } = useChatSettings();
 
     const updateChatSettings = useCallback((e: React.MouseEvent, settings: Partial<ChatSettings>) => {
         e.preventDefault();
-
-        apiUtils.user.settings.get.setData(undefined, (oldData) => {
-            if (!oldData) return oldData;
-            return {
-                ...oldData,
-                chat: {
-                    ...oldData.chat,
-                    ...settings,
-                },
-            };
-        });
-
-        debouncedUpdateSettings(settings);
-    }, [apiUtils.user.settings.get, debouncedUpdateSettings]);
+        void updateChatSettingsValue(settings);
+    }, [updateChatSettingsValue]);
 
     return (
         <DropdownMenu modal={false}>
@@ -77,14 +41,14 @@ export const ChatPanelDropdown = observer(({
                     className="flex items-center py-1.5"
                     onClick={(e) => {
                         updateChatSettings(e, {
-                            showSuggestions: !userSettings?.chat.showSuggestions,
+                            showSuggestions: !chatSettings.showSuggestions,
                         });
                     }}
                 >
                     <Icons.Check
                         className={cn(
                             'mr-2 h-4 w-4',
-                            userSettings?.chat.showSuggestions ? 'opacity-100' : 'opacity-0',
+                            chatSettings.showSuggestions ? 'opacity-100' : 'opacity-0',
                         )}
                     />
                     {t(transKeys.editor.panels.edit.tabs.chat.settings.showSuggestions)}
@@ -94,14 +58,14 @@ export const ChatPanelDropdown = observer(({
                     className="flex items-center py-1.5"
                     onClick={(e) => {
                         updateChatSettings(e, {
-                            showMiniChat: !userSettings?.chat.showMiniChat,
+                            showMiniChat: !chatSettings.showMiniChat,
                         });
                     }}
                 >
                     <Icons.Check
                         className={cn(
                             'mr-2 h-4 w-4',
-                            userSettings?.chat.showMiniChat ? 'opacity-100' : 'opacity-0',
+                            chatSettings.showMiniChat ? 'opacity-100' : 'opacity-0',
                         )}
                     />
                     {t(transKeys.editor.panels.edit.tabs.chat.settings.showMiniChat)}

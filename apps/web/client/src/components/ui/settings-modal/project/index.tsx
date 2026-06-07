@@ -1,28 +1,32 @@
 
 import { useEditorEngine } from '@/components/store/editor';
-import { api } from '@/trpc/react';
+import { convexApi } from '@/convex/api';
+import { useProjectSettings } from '@/hooks/use-convex-settings';
 import { DefaultSettings } from '@onlook/constants';
-import { toDbProjectSettings } from '@onlook/db';
 import { Button } from '@onlook/ui/button';
 import { Icons } from '@onlook/ui/icons';
 import { Input } from '@onlook/ui/input';
 import { Separator } from '@onlook/ui/separator';
 import { toast } from '@onlook/ui/sonner';
+import { useMutation, useQuery } from 'convex/react';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useState } from 'react';
 
+type LocalProject = {
+    projectId: string;
+    name: string;
+};
+
 export const ProjectTab = observer(() => {
     const editorEngine = useEditorEngine();
-    const utils = api.useUtils();
-    const { data: project } = api.project.get.useQuery({ projectId: editorEngine.projectId });
-    const { mutateAsync: updateProject } = api.project.update.useMutation();
-    const { data: projectSettings } = api.settings.get.useQuery({ projectId: editorEngine.projectId });
-    const { mutateAsync: updateProjectSettings } = api.settings.upsert.useMutation();
+    const project = useQuery(convexApi.projects.get, { projectId: editorEngine.projectId }) as LocalProject | null | undefined;
+    const updateProject = useMutation(convexApi.projects.update);
+    const { settings: projectSettings, save: saveProjectSettings } = useProjectSettings(editorEngine.projectId);
 
     const installCommand = projectSettings?.commands?.install ?? DefaultSettings.COMMANDS.install;
     const runCommand = projectSettings?.commands?.run ?? DefaultSettings.COMMANDS.run;
     const buildCommand = projectSettings?.commands?.build ?? DefaultSettings.COMMANDS.build;
-    const name = project?.name ?? '';
+    const name = project?.name ?? editorEngine.projectName;
 
     // Form state
     const [formData, setFormData] = useState({
@@ -59,27 +63,19 @@ export const ProjectTab = observer(() => {
             // Update project name if changed
             if (formData.name !== name) {
                 await updateProject({
-                    id: editorEngine.projectId,
+                    projectId: editorEngine.projectId,
                     name: formData.name,
                 });
-                // Invalidate queries to refresh UI
-                await Promise.all([
-                    utils.project.list.invalidate(),
-                    utils.project.get.invalidate({ projectId: editorEngine.projectId }),
-                ]);
             }
 
             // Update commands if any changed
             if (formData.install !== installCommand || formData.run !== runCommand || formData.build !== buildCommand) {
-                await updateProjectSettings({
-                    projectId: editorEngine.projectId,
-                    settings: toDbProjectSettings(editorEngine.projectId, {
-                        commands: {
-                            install: formData.install,
-                            run: formData.run,
-                            build: formData.build,
-                        },
-                    }),
+                await saveProjectSettings({
+                    commands: {
+                        install: formData.install,
+                        run: formData.run,
+                        build: formData.build,
+                    },
                 });
             }
 

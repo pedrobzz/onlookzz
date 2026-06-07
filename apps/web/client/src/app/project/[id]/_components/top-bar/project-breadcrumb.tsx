@@ -28,14 +28,8 @@ export const ProjectBreadcrumb = observer(() => {
     const project = useQuery(convexApi.projects.get, { projectId: editorEngine.projectId }) as LocalProject | null | undefined;
     const t = useTranslations();
 
-    async function handleNavigateToProjects() {
-        try {
-            editorEngine.screenshot.captureScreenshot();
-        } catch (error) {
-            console.error('Failed to take screenshots:', error);
-        } finally {
-            router.push('/projects');
-        }
+    function handleNavigateToProjects() {
+        router.push('/projects');
     }
 
     return (

@@ -28,7 +28,6 @@ export const EditorEngineProvider = ({
         const engine = new EditorEngine(project.id, project.name, posthog);
         void engine.initProject();
         engine.init();
-        engine.screenshot.lastScreenshotAt = project.metadata?.previewImg?.updatedAt ?? null;
         engineRef.current = engine;
         return engine;
     });
@@ -46,7 +45,6 @@ export const EditorEngineProvider = ({
                 const newEngine = new EditorEngine(project.id, project.name, posthog);
                 await newEngine.initProject();
                 await newEngine.init();
-                newEngine.screenshot.lastScreenshotAt = project.metadata?.previewImg?.updatedAt ?? null;
 
                 engineRef.current = newEngine;
                 setEditorEngine(newEngine);

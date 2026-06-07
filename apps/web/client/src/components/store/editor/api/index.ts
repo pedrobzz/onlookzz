@@ -1,10 +1,36 @@
 import { convexApi } from "@/convex/api";
 import { localConvexClient } from "@/convex/provider";
-import { api } from "@/trpc/client";
 import { fromConvexMessage, type ConvexMessageRow } from "@/utils/chat/convex-message";
+import type { ChatMessage, WebSearchResult } from "@onlook/models";
 import { makeAutoObservable } from "mobx";
 import type { EditorEngine } from "../engine";
-import type { ChatMessage } from "@onlook/models";
+
+type ApplyDiffResult = {
+    result: string | null;
+    error: string | null;
+};
+
+type ScrapeUrlResult = {
+    result: string | null;
+    error: string | null;
+};
+
+async function postJson<Input, Output>(url: string, input: Input): Promise<Output> {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify(input),
+    });
+    const body = await response.json() as Output & { error?: string | null };
+
+    if (!response.ok) {
+        throw new Error(body.error ?? `Request failed with status ${response.status}`);
+    }
+
+    return body;
+}
 
 export class ApiManager {
     constructor(private editorEngine: EditorEngine) {
@@ -15,9 +41,8 @@ export class ApiManager {
         query: string,
         allowed_domains: string[] | undefined,
         blocked_domains: string[] | undefined
-    }) {
-        const result = await api.utils.webSearch.mutate(input);
-        return result;
+    }): Promise<WebSearchResult> {
+        return postJson('/api/utils/web-search', input);
     }
 
     async applyDiff(input: {
@@ -28,8 +53,8 @@ export class ApiManager {
             projectId: string;
             conversationId: string | undefined;
         }
-    }) {
-        return await api.utils.applyDiff.mutate(input);
+    }): Promise<ApplyDiffResult> {
+        return postJson('/api/utils/apply-diff', input);
     }
 
     async scrapeUrl(input: {
@@ -39,8 +64,8 @@ export class ApiManager {
         includeTags?: string[] | undefined;
         excludeTags?: string[] | undefined;
         waitFor?: number | undefined;
-    }) {
-        return await api.utils.scrapeUrl.mutate(input);
+    }): Promise<ScrapeUrlResult> {
+        return postJson('/api/utils/scrape-url', input);
     }
 
     async getConversationMessages(conversationId: string): Promise<ChatMessage[]> {

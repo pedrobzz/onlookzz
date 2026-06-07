@@ -21,7 +21,6 @@ import { MoveManager } from './move';
 import { OverlayManager } from './overlay';
 import { PagesManager } from './pages';
 import { SandboxManager } from './sandbox';
-import { ScreenshotManager } from './screenshot';
 import { SnapManager } from './snap';
 import { StateManager } from './state';
 import { StyleManager } from './style';
@@ -59,7 +58,6 @@ export class EditorEngine {
     readonly pages: PagesManager = new PagesManager(this);
     readonly frames: FramesManager = new FramesManager(this);
     readonly frameEvent: FrameEventManager = new FrameEventManager(this);
-    readonly screenshot: ScreenshotManager = new ScreenshotManager(this);
     readonly snap: SnapManager = new SnapManager(this);
     readonly api: ApiManager = new ApiManager(this);
     readonly ide: IdeManager = new IdeManager(this);
@@ -112,7 +110,6 @@ export class EditorEngine {
         void this.fileSystem.cleanup();
         this.activeSandbox.clear();
         this.frameEvent.clear();
-        this.screenshot.clear();
         this.snap.hideSnapLines();
     }
 
