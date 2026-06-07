@@ -3,6 +3,7 @@ import '@onlook/ui/globals.css';
 
 import RB2BLoader from '@/components/rb2b-loader';
 import { TelemetryProvider } from '@/components/telemetry-provider';
+import { LocalConvexProvider } from '@/convex/provider';
 import { env } from '@/env';
 import { FeatureFlagsProvider } from '@/hooks/use-feature-flags';
 import { TRPCReactProvider } from '@/trpc/react';
@@ -88,10 +89,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                                 disableTransitionOnChange
                             >
                                 <AuthProvider>
-                                    <NextIntlClientProvider>
-                                        {children}
-                                        <Toaster />
-                                    </NextIntlClientProvider>
+                                    <LocalConvexProvider>
+                                        <NextIntlClientProvider>
+                                            {children}
+                                            <Toaster />
+                                        </NextIntlClientProvider>
+                                    </LocalConvexProvider>
                                 </AuthProvider>
                             </ThemeProvider>
                         </TelemetryProvider>
