@@ -1,57 +1,24 @@
 ---
-title: Self-Hosting Onlook
-description: Enterprise deployment options for self-hosting Onlook
+title: Self-Hosting
+description: Run Onlook as a standalone local app
 ---
 
-# Self-Hosting Onlook
+# Self-Hosting
 
-Onlook provides flexible self-hosting options for organizations that need complete control over their visual development environment. Choose the deployment method that best fits your infrastructure and requirements.
+Onlook is designed to run as a standalone local app backed by Convex and a local runtime. It does not require Supabase, Docker Compose, OAuth setup, billing infrastructure, or CodeSandbox.
 
-## Deployment Options
+## What You Host
 
-### Single Machine (Recommended)
-Deploy Onlook directly on a single server or VM using the standalone build. The simplest and most efficient way to self-host Onlook.
+- The Next.js web client.
+- Convex for app metadata and realtime state.
+- The local runtime on the same machine as the project folders.
+- Project source files under `.onlook/sandboxes/<project-id>`.
 
-**Best for:**
-- Small to medium teams (5-50 users)
-- Simple production deployments
-- Cost-conscious organizations
-- Teams wanting direct control without containers
+## What Stays Local
 
-[View Single Machine Guide →](/self-hosting/single-machine)
+The runtime must have direct access to the filesystem and process manager. It owns file reads and writes, watchers, installs, dev processes, one-shot commands, logs, preview ports, and runtime SSE events.
 
-### Docker Compose
-Run Onlook using Docker containers for isolated deployment. Good for containerized environments.
+## Guides
 
-**Best for:**
-- Organizations already using Docker
-- Development and staging environments
-- Teams requiring container isolation
-- Complex multi-service deployments
-
-[View Docker Compose Guide →](/self-hosting/docker-compose)
-
-### Cloud Deployment (Enterprise)
-Deploy Onlook to cloud infrastructure with proper scaling, monitoring, and enterprise features.
-
-**Best for:**
-- Large teams and enterprise deployments
-- Organizations requiring high availability
-- Teams needing advanced monitoring and compliance
-- Multi-region deployments
-
-[View Cloud Deployment Guide →](/self-hosting/cloud-deployment)
-
-## Architecture Overview
-
-Onlook consists of several components:
-
-- **Web Client**: Next.js application 
-- **Backend**: Supabase for database, auth, and storage
-
-## Support
-
-- Check the [GitHub Repository](https://github.com/onlook-dev/onlook)
-- Review [Running Locally](/developers/running-locally) for development setup
-- Join the [Discord Community](https://discord.gg/onlook)
-- Need a way to manage your instance? Check out the [Admin Dashboard](/self-hosting/admin-dashboard)
+- [Single Machine](/self-hosting/single-machine): run the standalone app and local runtime on one machine.
+- [External Services](/self-hosting/external-services): configure model/search providers used by AI features.

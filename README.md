@@ -84,15 +84,15 @@ builders.
   - [x] Detect and use Components – _Previously in
         [Onlook Desktop](https://github.com/onlook-dev/desktop)_
   - [ ] Drag-and-drop Components Panel
-  - [x] Use Branching to experiment with designs
+  - [x] Save and restore from local checkpoints
 - [x] Development Tools
   - [x] Real-time code editor
   - [x] Save and restore from checkpoints
   - [x] Run commands via CLI
   - [x] Connect with app marketplace
-- [x] Deploy your app in seconds
-  - [x] Generate sharable links
-  - [x] Link your custom domain    
+- [x] Run projects locally
+  - [x] Start and restart the local dev process
+  - [x] Inspect local runtime logs
 - [ ] Collaborate with your team
   - [x] Real-time editing
   - [ ] Leave comments
@@ -100,7 +100,7 @@ builders.
   - [x] Queue multiple messages at once
   - [ ] Use Images as references and as assets in a project
   - [ ] Setup and use MCPs in projects
-  - [ ] Allow Onlook to use itself as a toolcall for branch creation and iteration
+  - [ ] Allow Onlook to use itself as a toolcall for project iteration
 - [ ] Advanced project support
   - [ ] Support non-NextJS projects
   - [ ] Support non-Tailwind projects
@@ -154,13 +154,13 @@ To see how to Contribute, visit
 
 <img width="676" alt="architecture" src="assets/architecture.png">
 
-1. When you create an app, we load the code into a web container
-2. The container runs and serves the code
-3. Our editor receives the preview link and displays it in an iFrame
-4. Our editor reads and indexes the code from the container
-5. We instrument the code in order to map elements to their place in code
-6. When the element is edited, we edit the element in our iFrame, then in code
-7. Our AI chat also has code access and tools to understand and edit the code
+1. When you create an app, Onlook prepares a local project folder under `.onlook/sandboxes/<project-id>`.
+2. The local runtime installs dependencies, runs the dev process, captures logs, and exposes a preview port.
+3. The editor displays that local preview in an iFrame.
+4. The browser cache and parser index the project files from disk through the local runtime.
+5. We instrument the code in order to map elements to their place in code.
+6. When an element is edited, we update the iframe optimistically and write the change to disk through the local runtime.
+7. Convex stores app metadata, frames, conversations, settings, checkpoints, and realtime app state.
 
 This architecture can theoretically scale to any language or framework that
 displays DOM elements declaratively (e.g. jsx/tsx/html). We are focused on
@@ -175,12 +175,10 @@ For a full walkthrough, check out our
 
 - [Next.js](https://nextjs.org/) - Full stack
 - [TailwindCSS](https://tailwindcss.com/) - Styling
-- [tRPC](https://trpc.io/) - Server interface
 
-#### Database
+#### App data
 
-- [Supabase](https://supabase.com/) - Auth, Database, Storage
-- [Drizzle](https://orm.drizzle.team/) - ORM
+- [Convex](https://www.convex.dev/) - App metadata and realtime state
 
 #### AI
 
@@ -189,15 +187,14 @@ For a full walkthrough, check out our
 - [Morph Fast Apply](https://morphllm.com) - Fast apply model provider
 - [Relace](https://relace.ai) - Fast apply model provider
 
-#### Sandbox and hosting
+#### Local runtime
 
-- [CodeSandboxSDK](https://codesandbox.io/docs/sdk) - Dev sandbox
-- [Freestyle](https://www.freestyle.sh/) - Hosting
+- [Elysia](https://elysiajs.com/) - Local runtime API
+- Local filesystem - Project source of truth
 
 #### Runtime
 
 - [Bun](https://bun.sh/) - Monorepo, runtime, bundler
-- [Docker](https://www.docker.com/) - Container management
 
 ## Contributing
 

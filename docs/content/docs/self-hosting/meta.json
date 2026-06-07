@@ -2,10 +2,6 @@
     "title": "Self-Hosting",
     "pages": [
         "single-machine",
-        "docker-compose",
-        "cloud-deployment",
-        "external-services",
-        "oauth-setup",
-        "admin-dashboard"
+        "external-services"
     ]
 }

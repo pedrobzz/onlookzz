@@ -1,68 +1,35 @@
 ---
 title: Electron to Web Migration
-description: Documenting migration from Electron to Web
+description: Documenting migration from Electron to the standalone web app
 ---
 
 # Electron to Web Migration
 
-## Reasoning for shifting to web
+Onlook's current web architecture keeps the visual editor in a browser while preserving local filesystem and process access through a small local runtime.
 
-With Electron, there was a lot of friction to getting started
-- Downloading hundreds of MB of app (though it could be smaller)
-- Setting up / managing local dev environment. Our users lean less technical so this is unneeded friction.
-- We spent a lot of support time helping users debug their local machine
+## Mapping
 
-With web, we get the benefit of
-- Start editing anywhere on any machine
-- Resume editing across desktop and sharing across teams
-- Real-time collaboration
-- No more local machine setup/maintenance
-
-## Mapping to web equivalent
-
-### The “front-end”
-```
-BrowserView 		-> 	Next.js app
+```txt
+BrowserView -> Next.js app
+WebView     -> iframe preview with preload bridge
+Node server -> local Elysia runtime
+Local JSON  -> Convex metadata plus local project folders
 ```
 
-Thankfully, Electron ships web UI so most of our React/TailwindCSS styling was intact. Though many of the server communication had to be mapped from Electron IPC to Client-Server. We replaced those with tRPC to preserve type safety.
+## Frontend
 
-### The canvas/frame:
-```
-WebView 		-> 	iFrame
-```
+The editor UI moved into the Next.js app. Client/server boundaries follow App Router conventions, and app metadata is read and written through Convex.
 
-We previously used Electron webview which acted similar to an iFrame with better cross-origin support. The webview allowed us to communicate between the BrowserView and Webview to modify the DOM tree of the app directly. We replace that with iframe which is much more limited in terms of inter-process communication. For example, it is forbidden by the browser for websites to interact directly with iFrame elements if they’re not from the same origin. Our web app is not on the same origin as the served app so we had to work around this. 
+## Canvas and Frame
 
-What we decided to do was inject a script on the user app side which enables interprocess communication with postMessage. 
-https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage
+The preview runs in an iframe. Onlook injects a preload script into the preview app so the editor can map DOM elements to source code and apply visual edits.
 
-The script is internally called a preload script and is injected into the app’s layout through a CDN.
+## Runtime
 
-### The “backend”
-```
-Node Server		-> 	Remote container
-```
-Because Electron is a served Node server with filesystem access, we previously used the node server to edit the code of the users app directly. Since we no longer have a “user machine”, we replace that with an abstracted cloud container. This can be any system with a filesystem API that we can read/write/listen to. Currently using CodeSandbox but could be any provider or even a local running container. 
+The local runtime replaces Electron's direct Node access. It owns filesystem operations, watchers, install/dev/command processes, logs, preview ports, and SSE events.
 
-### Extra stuff
-```
-Local memory 	->	Supabase + Caching
-```
-Previously, we were storing most user/project information on the users machine as serialized JSON. Now, we store them in Postgres tables in Supabase. We maintain a caching layer on top of Postgres on the browser for ease of access and better loading. 
+Project source files stay on disk under `.onlook/sandboxes/<project-id>`. Convex stores metadata and realtime app state, not source file contents.
 
-## Before Architecture
+## Removed Web-era Services
 
-![Before Architecture](/images/electron-to-web-before.png)
-
-## After Architecture
-![After Architecture](/images/electron-to-web-after.png)
-
-## Full After Architecture with Everything
-
-![Full After Architecture](/images/full-architecture.png)
-
-## References
-
-- [Electron Repository](https://github.com/onlook-dev/desktop)
-- [Web Repository](https://github.com/onlook-dev/onlook)
+The standalone app no longer uses Supabase, tRPC, CodeSandbox, app-level branches, SaaS auth, billing, teams, custom domains, or Docker deployment.

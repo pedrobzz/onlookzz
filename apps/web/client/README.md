@@ -1,39 +1,19 @@
-# Create T3 App
+# Onlook Web Client
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with
-`create-t3-app`.
+This is the Next.js App Router client for the standalone Onlook app.
 
-## What's next? How do I make an app with this?
+## Runtime Model
 
-We try to keep this project as simple as possible, so you can start with just
-the scaffolding we set up for you, and add additional things later when they
-become necessary.
+- Convex owns app metadata, frames, conversations, messages, settings, checkpoints, uploads, and realtime app state.
+- The local runtime owns filesystem access, project watchers, installs, dev processes, command execution, logs, preview ports, and runtime SSE events.
+- Project source files live under `.onlook/sandboxes/<project-id>`.
 
-If you are not familiar with the different technologies used in this project,
-please refer to the respective docs. If you still are in the wind, please join
-our [Discord](https://t3.gg/discord) and ask for help.
+## Development
 
-- [Next.js](https://nextjs.org)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+Use Bun workspace scripts from the repository root:
 
-## Learn More
+```bash
+bun --filter @onlook/web-client typecheck
+```
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the
-following resources:
-
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available)
-  — Check out these awesome tutorials
-
-You can check out the
-[create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) —
-your feedback and contributions are welcome!
-
-## How do I deploy this?
-
-Follow our deployment guides for
-[Vercel](https://create.t3.gg/en/deployment/vercel),
-[Netlify](https://create.t3.gg/en/deployment/netlify) and
-[Docker](https://create.t3.gg/en/deployment/docker) for more information.
+Do not introduce Supabase, tRPC, CodeSandbox, Docker, SaaS auth, billing, teams, or app-level branches into this client.
