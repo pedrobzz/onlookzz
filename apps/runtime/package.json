@@ -1,0 +1,20 @@
+{
+  "name": "@onlook/runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.4.2",
+    "chokidar": "^5.0.0",
+    "elysia": "^1.4.28"
+  },
+  "devDependencies": {
+    "@onlook/typescript": "*",
+    "@types/bun": "latest",
+    "typescript": "^5.5.4"
+  }
+}
