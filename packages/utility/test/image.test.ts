@@ -71,8 +71,8 @@ describe('addImageFolderPrefix', () => {
             );
         });
 
-        it('handles CodeSandbox URLs', () => {
-            expect(addImageFolderPrefix('url("https://xxx-3000.csb.app/images/photo.jpg")')).toBe(
+        it('handles preview URLs', () => {
+            expect(addImageFolderPrefix('url("https://preview.local/images/photo.jpg")')).toBe(
                 'public/images/photo.jpg',
             );
         });

@@ -19,7 +19,6 @@ export enum InsertMode {
 
 export enum SettingsTabValue {
     SITE = 'site',
-    DOMAIN = 'domain',
     PROJECT = 'project',
     PREFERENCES = 'preferences',
     VERSIONS = 'versions',

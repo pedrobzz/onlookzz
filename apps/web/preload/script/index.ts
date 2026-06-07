@@ -24,7 +24,7 @@ const findOnlookParent = (): Window => {
     }
 
     // We're in a nested iframe (parent is NOT the top window)
-    // This is the Storybook case: Onlook -> CodeSandbox -> Storybook preview iframe
+    // This is the embedded preview case: Onlook -> preview host -> app iframe
     if (window.top) {
         console.log(`${PENPAL_CHILD_CHANNEL} - Using window.top for nested iframe scenario`);
         return window.top;
