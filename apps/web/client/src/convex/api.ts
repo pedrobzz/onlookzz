@@ -24,13 +24,15 @@ export const convexApi = {
   },
   conversations: {
     list: queryRef<{ projectId: string }, unknown[]>('conversations:list'),
-    upsert: mutationRef<{ conversationId: string; projectId: string; title: string; type?: string }, string>('conversations:upsert'),
+    upsert: mutationRef<{ conversationId: string; projectId: string; title: string; type?: string }, unknown | null>('conversations:upsert'),
+    update: mutationRef<{ conversationId: string; title?: string; type?: string }, unknown | null>('conversations:update'),
     remove: mutationRef<{ conversationId: string }, boolean>('conversations:remove'),
   },
   messages: {
     list: queryRef<{ conversationId: string }, unknown[]>('messages:list'),
     upsert: mutationRef<Record<string, unknown> & { messageId: string; conversationId: string; projectId: string }, string>('messages:upsert'),
     replaceConversation: mutationRef<{ conversationId: string; messages: unknown[] }, string[]>('messages:replaceConversation'),
+    updateCheckpoints: mutationRef<{ messageId: string; checkpoints: unknown[] }, boolean>('messages:updateCheckpoints'),
     remove: mutationRef<{ messageId: string }, boolean>('messages:remove'),
   },
   settings: {

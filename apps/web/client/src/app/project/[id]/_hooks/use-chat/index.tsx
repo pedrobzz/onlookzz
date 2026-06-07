@@ -2,11 +2,12 @@
 
 import { useEditorEngine } from '@/components/store/editor';
 import { handleToolCall } from '@/components/tools';
-import { api } from '@/trpc/client';
+import { convexApi } from '@/convex/api';
 import { useChat as useAiChat } from '@ai-sdk/react';
 import { ChatType, type ChatMessage, type GitMessageCheckpoint, type MessageContext, type QueuedMessage } from '@onlook/models';
 import { jsonClone } from '@onlook/utility';
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type FinishReason } from 'ai';
+import { useMutation } from 'convex/react';
 import { usePostHog } from 'posthog-js/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,6 +37,7 @@ interface UseChatProps {
 export function useChat({ conversationId, projectId, initialMessages }: UseChatProps) {
     const editorEngine = useEditorEngine();
     const posthog = usePostHog();
+    const updateMessageCheckpoints = useMutation(convexApi.messages.updateCheckpoints);
 
     const [finishReason, setFinishReason] = useState<FinishReason | null>(null);
     const [isExecutingToolCall, setIsExecutingToolCall] = useState(false);
@@ -270,7 +272,7 @@ export function useChat({ conversationId, projectId, initialMessages }: UseChatP
                 const checkpointsWithBranchId = [...oldCheckpoints, ...checkpoints].filter(
                     (cp): cp is GitMessageCheckpoint & { branchId: string } => !!cp.branchId
                 );
-                void api.chat.message.updateCheckpoints.mutate({
+                void updateMessageCheckpoints({
                     messageId: lastUserMessage.id,
                     checkpoints: checkpointsWithBranchId,
                 });
@@ -301,7 +303,7 @@ export function useChat({ conversationId, projectId, initialMessages }: UseChatP
             void applyCommit();
             void processNextQueuedMessage();
         }
-    }, [finishReason, conversationId, queuedMessages.length, processNextInQueue]);
+    }, [finishReason, conversationId, queuedMessages.length, processNextInQueue, updateMessageCheckpoints]);
 
     useEffect(() => {
         editorEngine.chat.conversation.setConversationLength(messages.length);

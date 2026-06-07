@@ -1,4 +1,7 @@
+import { convexApi } from "@/convex/api";
+import { localConvexClient } from "@/convex/provider";
 import { api } from "@/trpc/client";
+import { fromConvexMessage, type ConvexMessageRow } from "@/utils/chat/convex-message";
 import { makeAutoObservable } from "mobx";
 import type { EditorEngine } from "../engine";
 import type { ChatMessage } from "@onlook/models";
@@ -41,6 +44,7 @@ export class ApiManager {
     }
 
     async getConversationMessages(conversationId: string): Promise<ChatMessage[]> {
-        return await api.chat.message.getAll.query({ conversationId });
+        const rows = await localConvexClient.query(convexApi.messages.list, { conversationId }) as ConvexMessageRow[];
+        return rows.map(fromConvexMessage);
     }
 }

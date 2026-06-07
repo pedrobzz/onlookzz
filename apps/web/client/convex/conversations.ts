@@ -8,6 +8,17 @@ async function getConversationById(ctx: { db: any }, conversationId: string) {
     .unique();
 }
 
+function toClientConversation(row: any) {
+  return {
+    conversationId: row.conversationId,
+    projectId: row.projectId,
+    title: row.title,
+    type: row.type,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
 export const list = queryGeneric({
   args: {
     projectId: v.string(),
@@ -17,7 +28,7 @@ export const list = queryGeneric({
       .query('conversations')
       .withIndex('by_project_id', (q) => q.eq('projectId', args.projectId))
       .collect();
-    return rows.sort((a, b) => b.updatedAt - a.updatedAt);
+    return rows.sort((a, b) => b.updatedAt - a.updatedAt).map(toClientConversation);
   },
 });
 
@@ -38,10 +49,11 @@ export const upsert = mutationGeneric({
         type: args.type,
         updatedAt: now,
       });
-      return existing._id;
+      const updated = await getConversationById(ctx, args.conversationId);
+      return updated ? toClientConversation(updated) : null;
     }
 
-    return ctx.db.insert('conversations', {
+    await ctx.db.insert('conversations', {
       conversationId: args.conversationId,
       projectId: args.projectId,
       title: args.title,
@@ -49,6 +61,36 @@ export const upsert = mutationGeneric({
       createdAt: now,
       updatedAt: now,
     });
+    const created = await getConversationById(ctx, args.conversationId);
+    return created ? toClientConversation(created) : null;
+  },
+});
+
+export const update = mutationGeneric({
+  args: {
+    conversationId: v.string(),
+    title: v.optional(v.string()),
+    type: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await getConversationById(ctx, args.conversationId);
+    if (!conversation) {
+      throw new Error('Conversation not found');
+    }
+
+    const patch: Record<string, unknown> = {
+      updatedAt: Date.now(),
+    };
+    if (args.title !== undefined) {
+      patch.title = args.title;
+    }
+    if (args.type !== undefined) {
+      patch.type = args.type;
+    }
+
+    await ctx.db.patch(conversation._id, patch);
+    const updated = await getConversationById(ctx, args.conversationId);
+    return updated ? toClientConversation(updated) : null;
   },
 });
 

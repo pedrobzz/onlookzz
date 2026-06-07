@@ -1,5 +1,8 @@
-import { api } from '@/trpc/react';
+import { convexApi } from '@/convex/api';
+import { fromConvexMessage, type ConvexMessageRow } from '@/utils/chat/convex-message';
 import { Icons } from '@onlook/ui/icons/index';
+import { useQuery } from 'convex/react';
+import { useMemo } from 'react';
 import { ChatTabContent } from './chat-tab-content';
 
 interface ChatTabProps {
@@ -8,12 +11,13 @@ interface ChatTabProps {
 }
 
 export const ChatTab = ({ conversationId, projectId }: ChatTabProps) => {
-    const { data: initialMessages, isLoading } = api.chat.message.getAll.useQuery(
-        { conversationId: conversationId },
-        { enabled: !!conversationId },
+    const messageRows = useQuery(convexApi.messages.list, { conversationId }) as ConvexMessageRow[] | undefined;
+    const initialMessages = useMemo(
+        () => messageRows?.map(fromConvexMessage),
+        [messageRows],
     );
 
-    if (!initialMessages || isLoading) {
+    if (!initialMessages) {
         return (
             <div className="flex-1 flex items-center justify-center w-full h-full text-foreground-secondary" >
                 <Icons.LoadingSpinner className="animate-spin mr-2" />

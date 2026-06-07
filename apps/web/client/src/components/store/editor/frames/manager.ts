@@ -1,6 +1,7 @@
 import type { IFrameView } from '@/app/project/[id]/_components/canvas/frame/view';
-import { api } from '@/trpc/client';
-import { toDbFrame, toDbPartialFrame } from '@onlook/db';
+import { convexApi } from '@/convex/api';
+import { localConvexClient } from '@/convex/provider';
+import { frameToConvexInput } from '@/utils/project/default-frame';
 import { type Frame } from '@onlook/models';
 import { calculateNonOverlappingPosition } from '@onlook/utility';
 import { debounce } from 'lodash';
@@ -34,6 +35,7 @@ export class FramesManager {
     }
 
     applyFrames(frames: Frame[]) {
+        this._frameIdToData.clear();
         frames.forEach((frame, index) => {
             this._frameIdToData.set(frame.id, {
                 frame,
@@ -196,7 +198,7 @@ export class FramesManager {
             return;
         }
 
-        const success = await api.frame.delete.mutate({
+        const success = await localConvexClient.mutation(convexApi.frames.remove, {
             frameId: frameData.frame.id,
         });
 
@@ -208,12 +210,14 @@ export class FramesManager {
     }
 
     async create(frame: Frame) {
-        const success = await api.frame.create.mutate(
-            toDbFrame(roundDimensions(frame)),
+        const roundedFrame = roundDimensions(frame);
+        const success = await localConvexClient.mutation(
+            convexApi.frames.upsert,
+            frameToConvexInput(roundedFrame, this.editorEngine.projectId),
         );
 
         if (success) {
-            this._frameIdToData.set(frame.id, { frame, view: null, selected: false });
+            this._frameIdToData.set(roundedFrame.id, { frame: roundedFrame, view: null, selected: false });
         } else {
             console.error('Failed to create frame');
         }
@@ -257,18 +261,21 @@ export class FramesManager {
                 selected: existingFrame.selected,
             });
         }
-        await this.saveToStorage(frameId, frame);
+        await this.saveToStorage(frameId);
     }
 
     saveToStorage = debounce(this.undebouncedSaveToStorage.bind(this), 1000);
 
-    async undebouncedSaveToStorage(frameId: string, frame: Partial<Frame>) {
+    async undebouncedSaveToStorage(frameId: string) {
         try {
-            const frameToUpdate = toDbPartialFrame(frame);
-            const success = await api.frame.update.mutate({
-                ...frameToUpdate,
-                id: frameId,
-            });
+            const currentFrame = this.get(frameId)?.frame;
+            if (!currentFrame) {
+                return;
+            }
+            const success = await localConvexClient.mutation(
+                convexApi.frames.upsert,
+                frameToConvexInput(roundDimensions(currentFrame), this.editorEngine.projectId),
+            );
 
             if (!success) {
                 console.error('Failed to update frame');

@@ -1,47 +1,60 @@
 'use client';
 
 import { useEditorEngine } from '@/components/store/editor';
-import { api } from '@/trpc/react';
-import { type ProjectCreateRequest } from '@onlook/db';
+import { convexApi } from '@/convex/api';
 import {
-    ChatType,
-    CreateRequestContextType,
-    MessageContextType,
-    ProjectCreateRequestStatus,
-    type ImageMessageContext,
-    type MessageContext,
-} from '@onlook/models';
-import { toast } from '@onlook/ui/sonner';
-import { useEffect, useRef, useState } from 'react';
+    createDefaultLocalFrame,
+    frameFromConvex,
+    frameToConvexInput,
+    type ConvexFrameRow,
+} from '@/utils/project/default-frame';
+import { AgentType, type ChatConversation } from '@onlook/models';
+import { useMutation, useQuery } from 'convex/react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTabActive } from '../_hooks/use-tab-active';
-import { v4 as uuidv4 } from 'uuid';
 
 interface ProjectReadyState {
-    canvas: boolean;
+    frames: boolean;
     conversations: boolean;
     sandbox: boolean;
 }
+
+type ConvexConversationRow = {
+    conversationId: string;
+    projectId: string;
+    title: string;
+    createdAt: number;
+    updatedAt: number;
+};
+
+const toChatConversation = (row: ConvexConversationRow): ChatConversation => ({
+    id: row.conversationId,
+    agentType: AgentType.ROOT,
+    title: row.title || null,
+    projectId: row.projectId,
+    createdAt: new Date(row.createdAt),
+    updatedAt: new Date(row.updatedAt),
+    suggestions: [],
+});
 
 export const useStartProject = () => {
     const editorEngine = useEditorEngine();
     const sandbox = editorEngine.activeSandbox;
     const [error, setError] = useState<string | null>(null);
-    const processedRequestIdRef = useRef<string | null>(null);
     const { tabState } = useTabActive();
-    const apiUtils = api.useUtils();
-    const { data: canvasWithFrames, error: canvasError } = api.userCanvas.getWithFrames.useQuery({ projectId: editorEngine.projectId });
-    const { data: conversations, error: conversationsError } = api.chat.conversation.getAll.useQuery({ projectId: editorEngine.projectId });
-    const { data: creationRequest, error: creationRequestError } = api.project.createRequest.getPendingRequest.useQuery({ projectId: editorEngine.projectId });
-    const { mutateAsync: updateCreateRequest } = api.project.createRequest.updateStatus.useMutation({
-        onSettled: async () => {
-            await apiUtils.project.createRequest.getPendingRequest.invalidate({ projectId: editorEngine.projectId });
-        },
-    });
+    const frameRows = useQuery(convexApi.frames.list, { projectId: editorEngine.projectId }) as ConvexFrameRow[] | undefined;
+    const conversationRows = useQuery(convexApi.conversations.list, { projectId: editorEngine.projectId }) as ConvexConversationRow[] | undefined;
+    const upsertFrame = useMutation(convexApi.frames.upsert);
     const [projectReadyState, setProjectReadyState] = useState<ProjectReadyState>({
-        canvas: false,
+        frames: false,
         conversations: false,
         sandbox: false,
     });
+
+    const conversations = useMemo(
+        () => conversationRows?.map(toChatConversation),
+        [conversationRows],
+    );
 
     const updateProjectReadyState = (state: Partial<ProjectReadyState>) => {
         setProjectReadyState((prev) => ({ ...prev, ...state }));
@@ -60,12 +73,23 @@ export const useStartProject = () => {
     }, [tabState, sandbox.session]);
 
     useEffect(() => {
-        if (canvasWithFrames) {
-            editorEngine.canvas.applyCanvas(canvasWithFrames.userCanvas);
-            editorEngine.frames.applyFrames(canvasWithFrames.frames);
-            updateProjectReadyState({ canvas: true });
+        const applyFrames = async () => {
+            if (!frameRows) {
+                return;
+            }
+
+            if (frameRows.length === 0) {
+                const frame = createDefaultLocalFrame(editorEngine.projectId);
+                await upsertFrame(frameToConvexInput(frame, editorEngine.projectId));
+                editorEngine.frames.applyFrames([frame]);
+            } else {
+                editorEngine.frames.applyFrames(frameRows.map(frameFromConvex));
+            }
+            updateProjectReadyState({ frames: true });
         }
-    }, [canvasWithFrames]);
+
+        void applyFrames();
+    }, [editorEngine.frames, editorEngine.projectId, frameRows, upsertFrame]);
 
     useEffect(() => {
         const applyConversations = async () => {
@@ -78,75 +102,8 @@ export const useStartProject = () => {
     }, [editorEngine.chat.conversation, conversations]);
 
     useEffect(() => {
-        const isProjectReady = Object.values(projectReadyState).every((value) => value);
-        if (creationRequest && processedRequestIdRef.current !== creationRequest.id && isProjectReady && editorEngine.chat._sendMessageAction) {
-            processedRequestIdRef.current = creationRequest.id;
-            void resumeCreate(creationRequest);
-        }
-    }, [creationRequest, projectReadyState, editorEngine.chat._sendMessageAction]);
-
-    const resumeCreate = async (creationData: ProjectCreateRequest) => {
-        try {
-            if (editorEngine.projectId !== creationData.projectId) {
-                throw new Error('Project ID mismatch');
-            }
-
-            const createContext: MessageContext[] =
-                await editorEngine.chat.context.getCreateContext();
-            const imageContexts: ImageMessageContext[] = creationData.context
-                .filter((context) => context.type === CreateRequestContextType.IMAGE)
-                .map((context) => ({
-                    type: MessageContextType.IMAGE,
-                    source: 'external',
-                    content: context.content,
-                    mimeType: context.mimeType,
-                    displayName: 'user image',
-                    id: uuidv4(),
-                }));
-
-            const context: MessageContext[] = [...createContext, ...imageContexts];
-            editorEngine.chat.context.addContexts(context);
-
-            const prompt = creationData.context
-                .filter((context) => context.type === CreateRequestContextType.PROMPT)
-                .map((context) => context.content)
-                .join('\n');
-
-            const [conversation] = await editorEngine.chat.conversation.getConversations(
-                editorEngine.projectId,
-            );
-
-            if (!conversation) {
-                throw new Error('No conversation found');
-            }
-
-            await editorEngine.chat.conversation.selectConversation(conversation.id);
-            await editorEngine.chat.sendMessage(prompt, ChatType.CREATE);
-
-            try {
-                await updateCreateRequest({
-                    projectId: editorEngine.projectId,
-                    status: ProjectCreateRequestStatus.COMPLETED,
-                });
-            } catch (error) {
-                console.error('Failed to update create request', error);
-                toast.error('Failed to complete create request', {
-                    description: error instanceof Error ? error.message : 'Unknown error',
-                });
-            }
-        } catch (error) {
-            processedRequestIdRef.current = null; // Allow retry on failure
-            console.error('Failed to resume create request', error);
-            toast.error('Failed to resume create request', {
-                description: error instanceof Error ? error.message : 'Unknown error',
-            });
-        }
-    };
-
-
-    useEffect(() => {
-        setError(canvasError?.message ?? conversationsError?.message ?? creationRequestError?.message ?? null);
-    }, [canvasError, conversationsError, creationRequestError]);
+        setError(null);
+    }, [frameRows, conversations]);
 
     return { isProjectReady: Object.values(projectReadyState).every((value) => value), error };
 }

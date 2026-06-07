@@ -1,12 +1,32 @@
-import { api } from '@/trpc/client';
-import { type ChatConversation } from '@onlook/models';
+import { convexApi } from '@/convex/api';
+import { localConvexClient } from '@/convex/provider';
+import { AgentType, type ChatConversation } from '@onlook/models';
 import { makeAutoObservable } from 'mobx';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 import type { EditorEngine } from '../engine';
 
 interface CurrentConversation extends ChatConversation {
     messageCount: number;
 }
+
+type ConvexConversationRow = {
+    conversationId: string;
+    projectId: string;
+    title: string;
+    createdAt: number;
+    updatedAt: number;
+};
+
+const toChatConversation = (row: ConvexConversationRow): ChatConversation => ({
+    id: row.conversationId,
+    agentType: AgentType.ROOT,
+    title: row.title || null,
+    projectId: row.projectId,
+    createdAt: new Date(row.createdAt),
+    updatedAt: new Date(row.updatedAt),
+    suggestions: [],
+});
 
 export class ConversationManager {
     current: CurrentConversation | null = null;
@@ -56,14 +76,20 @@ export class ConversationManager {
             if (this.current?.messageCount === 0 && !this.current?.title) {
                 throw new Error('Current conversation is already empty.');
             }
-            const newConversation = await api.chat.conversation.upsert.mutate({
+            const newConversation = await localConvexClient.mutation(convexApi.conversations.upsert, {
+                conversationId: uuidv4(),
                 projectId: this.editorEngine.projectId,
-            });
+                title: '',
+            }) as ConvexConversationRow | null;
+            if (!newConversation) {
+                throw new Error('Conversation not created');
+            }
+            const conversation = toChatConversation(newConversation);
             this.current = {
-                ...newConversation,
+                ...conversation,
                 messageCount: 0,
             };
-            this.conversations.push(newConversation);
+            this.conversations.push(conversation);
         } catch (error) {
             console.error('Error starting new conversation', error);
             toast.error('Error starting new conversation.', {
@@ -114,9 +140,15 @@ export class ConversationManager {
             console.error('No conversation found');
             return;
         }
-        const title = await api.chat.conversation.generateTitle.mutate({
-            conversationId: this.current?.id,
-            content,
+        const title = content
+            .trim()
+            .split(/\s+/)
+            .slice(0, 4)
+            .join(' ')
+            .slice(0, 50) || 'New conversation';
+        await localConvexClient.mutation(convexApi.conversations.update, {
+            conversationId: this.current.id,
+            title,
         });
         if (!title) {
             console.error('Error generating conversation title. No title returned.');
@@ -138,22 +170,31 @@ export class ConversationManager {
     }
 
     async getConversationsFromStorage(id: string): Promise<ChatConversation[] | null> {
-        return api.chat.conversation.getAll.query({ projectId: id });
+        const rows = await localConvexClient.query(convexApi.conversations.list, { projectId: id }) as ConvexConversationRow[];
+        return rows.map(toChatConversation);
     }
 
     async upsertConversationInStorage(conversation: Partial<ChatConversation>): Promise<ChatConversation> {
-        return await api.chat.conversation.upsert.mutate({
-            ...conversation,
+        const row = await localConvexClient.mutation(convexApi.conversations.upsert, {
+            conversationId: conversation.id ?? uuidv4(),
             projectId: this.editorEngine.projectId,
-        });
+            title: conversation.title ?? '',
+        }) as ConvexConversationRow | null;
+        if (!row) {
+            throw new Error('Conversation not saved');
+        }
+        return toChatConversation(row);
     }
 
     async updateConversationInStorage(conversation: Partial<ChatConversation> & { id: string }) {
-        await api.chat.conversation.update.mutate(conversation);
+        await localConvexClient.mutation(convexApi.conversations.update, {
+            conversationId: conversation.id,
+            title: conversation.title ?? undefined,
+        });
     }
 
     async deleteConversationInStorage(id: string) {
-        await api.chat.conversation.delete.mutate({ conversationId: id });
+        await localConvexClient.mutation(convexApi.conversations.remove, { conversationId: id });
     }
 
     clear() {

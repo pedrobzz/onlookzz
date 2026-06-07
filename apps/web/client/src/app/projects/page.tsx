@@ -1,6 +1,7 @@
 'use client';
 
 import { convexApi } from '@/convex/api';
+import { createDefaultLocalFrame, frameToConvexInput } from '@/utils/project/default-frame';
 import { Button } from '@onlook/ui/button';
 import { Icons } from '@onlook/ui/icons';
 import { Input } from '@onlook/ui/input';
@@ -19,6 +20,7 @@ type LocalProject = {
 export default function ProjectsPage() {
     const projects = (useQuery(convexApi.projects.list, {}) as LocalProject[] | undefined) ?? [];
     const createProject = useMutation(convexApi.projects.create);
+    const createFrame = useMutation(convexApi.frames.upsert);
     const removeProject = useMutation(convexApi.projects.remove);
     const [search, setSearch] = useState('');
     const [isCreating, setIsCreating] = useState(false);
@@ -43,6 +45,8 @@ export default function ProjectsPage() {
                 name: 'Untitled project',
                 description: 'Local project',
             });
+            const frame = createDefaultLocalFrame(projectId);
+            await createFrame(frameToConvexInput(frame, projectId));
         } finally {
             setIsCreating(false);
         }

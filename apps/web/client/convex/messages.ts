@@ -82,12 +82,40 @@ export const replaceConversation = mutationGeneric({
     await Promise.all(existing.map((message) => ctx.db.delete(message._id)));
 
     const now = Date.now();
-    return Promise.all(args.messages.map((message) => ctx.db.insert('messages', {
+    const inserted = await Promise.all(args.messages.map((message) => ctx.db.insert('messages', {
       ...message,
       conversationId: args.conversationId,
       createdAt: message.createdAt ?? now,
       updatedAt: now,
     })));
+
+    const conversation = await ctx.db
+      .query('conversations')
+      .withIndex('by_conversation_id', (q) => q.eq('conversationId', args.conversationId))
+      .unique();
+    if (conversation) {
+      await ctx.db.patch(conversation._id, { updatedAt: now });
+    }
+
+    return inserted;
+  },
+});
+
+export const updateCheckpoints = mutationGeneric({
+  args: {
+    messageId: v.string(),
+    checkpoints: v.array(v.any()),
+  },
+  handler: async (ctx, args) => {
+    const message = await getMessageById(ctx, args.messageId);
+    if (!message) {
+      return false;
+    }
+    await ctx.db.patch(message._id, {
+      checkpoints: args.checkpoints,
+      updatedAt: Date.now(),
+    });
+    return true;
   },
 });
 
