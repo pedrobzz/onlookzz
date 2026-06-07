@@ -7,7 +7,7 @@ import path from 'path';
 import { useMemo, useState } from 'react';
 import { updateImageReferences } from '../utils/image-references';
 
-export const useImageOperations = (projectId: string, _branchId: string, activeFolder: string, codeEditor?: CodeFileSystem, editorEngine?: EditorEngine) => {
+export const useImageOperations = (projectId: string, activeFolder: string, codeEditor?: CodeFileSystem, editorEngine?: EditorEngine) => {
     const [isUploading, setIsUploading] = useState(false);
 
     // Get directory entries

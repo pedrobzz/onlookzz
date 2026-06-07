@@ -7,7 +7,6 @@ import { observer } from 'mobx-react-lite';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { HoverOnlyTooltip } from '../../../editor-bar/hover-tooltip';
-import { BranchDisplay } from './branch';
 import { createMouseMoveHandler } from './helpers';
 import { PageSelector } from './page-selector';
 
@@ -197,8 +196,6 @@ export const TopBar = observer(
                             <Icons.Reload />
                         </Button>
                     </HoverOnlyTooltip>
-                    <BranchDisplay frame={frame} />
-                    <span className={cn("ml-1.25 mb-0.5", isSelected ? "text-teal-700" : "text-foreground-secondary/50")}>·</span>
                     <PageSelector frame={frame} />
                 </div>
                 <HoverOnlyTooltip content="Preview in new tab" side="top" hideArrow className="mb-0">

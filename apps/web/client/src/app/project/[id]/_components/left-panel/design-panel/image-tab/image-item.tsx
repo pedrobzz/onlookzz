@@ -32,7 +32,6 @@ interface ImageItemProps {
         mimeType?: string;
     };
     projectId: string;
-    branchId: string;
     onImageDragStart: (e: React.DragEvent<HTMLDivElement>, image: ImageContentData) => void;
     onImageDragEnd: () => void;
     onImageMouseDown: () => void;

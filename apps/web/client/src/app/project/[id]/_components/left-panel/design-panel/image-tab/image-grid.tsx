@@ -9,7 +9,6 @@ import type { ImageData } from './types';
 interface ImageGridProps {
     images: ImageData[];
     projectId: string;
-    branchId: string;
     search: string;
     onUpload: (files: FileList) => Promise<void>;
     onRename: (oldPath: string, newName: string) => Promise<void>;
@@ -17,7 +16,7 @@ interface ImageGridProps {
     onAddToChat: (imagePath: string) => void;
 }
 
-export const ImageGrid = ({ images, projectId, branchId, search, onUpload, onRename, onDelete, onAddToChat }: ImageGridProps) => {
+export const ImageGrid = ({ images, projectId, search, onUpload, onRename, onDelete, onAddToChat }: ImageGridProps) => {
     const {
         handleDragEnter, handleDragLeave, handleDragOver, handleDrop, isDragging,
         onImageDragStart, onImageDragEnd, onImageMouseDown, onImageMouseUp
@@ -39,7 +38,6 @@ export const ImageGrid = ({ images, projectId, branchId, search, onUpload, onRen
                         key={image.path}
                         image={image}
                         projectId={projectId}
-                        branchId={branchId}
                         onImageDragStart={onImageDragStart}
                         onImageDragEnd={onImageDragEnd}
                         onImageMouseDown={onImageMouseDown}

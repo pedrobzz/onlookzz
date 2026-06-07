@@ -19,7 +19,6 @@ import { SearchUploadBar } from './search-upload-bar';
 export const ImagesTab = observer(() => {
     const editorEngine = useEditorEngine();
     const projectId = editorEngine.projectId;
-    const branchId = editorEngine.branches.activeBranch.id;
 
     // Navigation state and handlers
     const {
@@ -32,11 +31,6 @@ export const ImagesTab = observer(() => {
         filterImages,
     } = useNavigation();
 
-    // Get the CodeEditorApi for the active branch
-    const branchData = editorEngine.branches.getBranchDataById(
-        editorEngine.branches.activeBranch.id,
-    );
-
     // Image operations and data
     const {
         folders,
@@ -47,7 +41,7 @@ export const ImagesTab = observer(() => {
         handleUpload,
         handleRename,
         handleDelete,
-    } = useImageOperations(projectId, branchId, activeFolder, branchData?.codeEditor, editorEngine);
+    } = useImageOperations(projectId, activeFolder, editorEngine.fileSystem, editorEngine);
 
     // Filter images based on search
     const images = filterImages(allImages);
@@ -85,7 +79,7 @@ export const ImagesTab = observer(() => {
             const mimeType = getMimeType(fileName);
 
             // Load the actual image file content
-            const fileContent = await branchData?.codeEditor.readFile(imagePath);
+            const fileContent = await editorEngine.fileSystem.readFile(imagePath);
             if (!fileContent) {
                 throw new Error('Failed to load image file');
             }
@@ -96,7 +90,6 @@ export const ImagesTab = observer(() => {
                 type: MessageContextType.IMAGE,
                 source: 'local',
                 path: imagePath,
-                branchId: branchId,
                 content: base64Content,
                 displayName: fileName,
                 mimeType: mimeType,
@@ -146,7 +139,6 @@ export const ImagesTab = observer(() => {
             <ImageGrid
                 images={images}
                 projectId={projectId}
-                branchId={branchId}
                 search={search}
                 onUpload={handleUpload}
                 onRename={handleRenameWithFeedback}

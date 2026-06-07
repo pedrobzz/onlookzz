@@ -71,8 +71,8 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
 
     // This is a workaround to allow code controls to access the hasUnsavedChanges state
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const branchData = editorEngine.branches.activeBranchData;
-    const branchId = branchData.branch.id;
+    const codeEditor = editorEngine.fileSystem;
+    const projectContextId = projectId;
     const {
         entries: fileEntries,
         loading: filesLoading,
@@ -204,11 +204,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
     };
 
     const saveFileWithHash = async (filePath: string, file: EditorFile): Promise<EditorFile> => {
-        if (!branchData) {
-            throw new Error('Branch data not found');
-        }
-
-        await branchData.codeEditor.writeFile(filePath, file.content || '');
+        await codeEditor.writeFile(filePath, file.content || '');
 
         if (file.type === 'text') {
             const newHash = await hashContent(file.content);
@@ -219,7 +215,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
     };
 
     const handleSaveFile = async () => {
-        if (!selectedFilePath || !activeEditorFile || !branchData) return;
+        if (!selectedFilePath || !activeEditorFile) return;
         try {
             // Preserve scroll position and cursor before save
             const editorView = editorViewsRef.current.get(selectedFilePath);
@@ -231,7 +227,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
             await saveFileWithHash(selectedFilePath, activeEditorFile);
 
             // Read back the formatted content from disk
-            const formattedContent = await branchData.codeEditor.readFile(selectedFilePath);
+            const formattedContent = await codeEditor.readFile(selectedFilePath);
             if (typeof formattedContent === 'string') {
                 const newHash = await hashContent(formattedContent);
                 const formattedFile: TextEditorFile = {
@@ -377,13 +373,11 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
     };
 
     const handleRenameFile = (oldPath: string, newPath: string) => {
-        if (!branchData?.codeEditor) return;
-
         const fileName = oldPath.split('/').pop() || 'file';
         const newFileName = newPath.split('/').pop() || 'file';
 
         toast.promise(
-            branchData.codeEditor.moveFile(oldPath, newPath),
+            codeEditor.moveFile(oldPath, newPath),
             {
                 loading: `Renaming ${fileName}...`,
                 success: `Renamed to ${newFileName}`,
@@ -393,8 +387,6 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
     };
 
     const handleDeleteFile = (path: string) => {
-        if (!branchData?.codeEditor) return;
-
         const fileName = path.split('/').pop() || 'item';
         const isDirectory = fileEntries.some(entry => {
             const checkPath = (e: typeof fileEntries[0]): boolean => {
@@ -406,7 +398,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
         });
 
         toast.promise(
-            branchData.codeEditor.deleteFile(path),
+            codeEditor.deleteFile(path),
             {
                 loading: `Deleting ${fileName}...`,
                 success: `${isDirectory ? 'Folder' : 'File'} "${fileName}" deleted`,
@@ -416,14 +408,10 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
     };
 
     const handleCreateFile = async (filePath: string, content: string | Uint8Array = '') => {
-        if (!branchData) {
-            throw new Error('Branch data not found');
-        }
-
         const fileName = filePath.split('/').pop() || 'file';
 
         await toast.promise(
-            branchData.codeEditor.writeFile(filePath, content),
+            codeEditor.writeFile(filePath, content),
             {
                 loading: `Creating ${fileName}...`,
                 success: `File "${fileName}" created`,
@@ -433,14 +421,10 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
     };
 
     const handleCreateFolder = async (folderPath: string) => {
-        if (!branchData?.codeEditor) {
-            throw new Error('Code editor not available');
-        }
-
         const folderName = folderPath.split('/').pop() || 'folder';
 
         await toast.promise(
-            branchData.codeEditor.createDirectory(folderPath),
+            codeEditor.createDirectory(folderPath),
             {
                 loading: `Creating ${folderName}...`,
                 success: `Folder "${folderName}" created`,
@@ -506,7 +490,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
                 displayName: fileName + ' (' + startLine + ':' + endLine + ')',
                 start: startLine,
                 end: endLine,
-                branchId: branchId,
+                branchId: projectContextId,
             }]);
 
             toast.success('Selection added to chat context');
@@ -514,7 +498,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
             console.error('Error adding selection to chat:', error);
             toast.error('Failed to add selection to chat');
         }
-    }, [selectedFilePath, activeEditorFile, branchId, editorEngine.chat.context]);
+    }, [selectedFilePath, activeEditorFile, projectContextId, editorEngine.chat.context]);
 
     // Cleanup editor instances when component unmounts
     useEffect(() => {
@@ -526,13 +510,11 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
 
     // Handle adding file to chat
     const handleAddFileToChat = useCallback(async (filePath: string) => {
-        if (!branchData) return;
-
         try {
             const fileName = filePath.split('/').pop() || filePath;
 
             // Load the file content
-            const fileContent = await branchData.codeEditor.readFile(filePath);
+            const fileContent = await codeEditor.readFile(filePath);
             if (!fileContent) {
                 throw new Error('Failed to load file');
             }
@@ -546,7 +528,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
                 type: MessageContextType.FILE,
                 path: filePath,
                 displayName: fileName,
-                branchId: branchId,
+                branchId: projectContextId,
                 content: contentString,
             }]);
 
@@ -555,7 +537,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
             console.error('Failed to add file to chat:', error);
             toast.error('Failed to add file to chat');
         }
-    }, [branchId, branchData, editorEngine.chat.context]);
+    }, [projectContextId, codeEditor, editorEngine.chat.context]);
 
 
     return (

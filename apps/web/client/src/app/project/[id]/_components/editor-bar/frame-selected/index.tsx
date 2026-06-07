@@ -3,7 +3,6 @@
 import { useEditorEngine } from '@/components/store/editor';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
-import { BranchDisplay } from '../../canvas/frame/top-bar/branch';
 import { useDropdownControl } from '../hooks/use-dropdown-manager';
 import { useMeasureGroup } from '../hooks/use-measure-group';
 import { OverflowMenu } from '../overflow-menu';
@@ -80,4 +79,4 @@ export const FrameSelected = observer(({ availableWidth = 0 }: { availableWidth?
             />
         </div>
     );
-}); 
+});
