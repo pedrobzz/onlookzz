@@ -10,13 +10,10 @@ import { capitalizeFirstLetter } from '@onlook/utility';
 import { observer } from 'mobx-react-lite';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import DomainTab from './domain';
 import { SettingsTabValue, type SettingTab } from './helpers';
-import { PreferencesTab } from './preferences-tab';
 import { ProjectTab } from './project';
 import { SiteTab } from './site';
 import { PageTab } from './site/page';
-import { SubscriptionTab } from './subscription-tab';
 import { VersionsTab } from './versions';
 
 function TruncatedLabelWithTooltip({ label }: { label: string }) {
@@ -63,29 +60,11 @@ export const SettingsModalWithProjects = observer(() => {
         }, [] as PageNode[]);
     }, [pagesManager.tree]);
 
-    const globalTabs: SettingTab[] = [
-        {
-            label: SettingsTabValue.PREFERENCES,
-            icon: <Icons.Person className="mr-2 h-4 w-4" />,
-            component: <PreferencesTab />,
-        },
-        {
-            label: SettingsTabValue.SUBSCRIPTION,
-            icon: <Icons.CreditCard className="mr-2 h-4 w-4" />,
-            component: <SubscriptionTab />,
-        },
-    ];
-
     const projectTabs: SettingTab[] = [
         {
             label: SettingsTabValue.SITE,
             icon: <Icons.File className="mr-2 h-4 w-4" />,
             component: <SiteTab />,
-        },
-        {
-            label: SettingsTabValue.DOMAIN,
-            icon: <Icons.Globe className="mr-2 h-4 w-4" />,
-            component: <DomainTab />,
         },
         {
             label: SettingsTabValue.PROJECT,
@@ -107,7 +86,7 @@ export const SettingsModalWithProjects = observer(() => {
             component: <PageTab metadata={page.metadata} path={page.path} />,
         }));
 
-    const tabs = [...globalTabs, ...pagesTabs, ...projectTabs];
+    const tabs = [...pagesTabs, ...projectTabs];
 
     // TODO: use file system like code tab
     useEffect(() => {
@@ -219,29 +198,6 @@ export const SettingsModalWithProjects = observer(() => {
                                                 <Separator />
                                             </>
                                         )}
-                                        <div className="shrink-0 w-48 space-y-1 p-5 text-regularPlus">
-                                            <p className="text-muted-foreground text-smallPlus ml-2.5 mt-2 mb-2">
-                                                Global Settings
-                                            </p>
-                                            {globalTabs.map((tab) => (
-                                                <Button
-                                                    key={tab.label}
-                                                    variant="ghost"
-                                                    className={cn(
-                                                        'w-full justify-start px-0 hover:bg-transparent',
-                                                        stateManager.settingsTab === tab.label
-                                                            ? 'text-foreground-active'
-                                                            : 'text-muted-foreground',
-                                                    )}
-                                                    onClick={() =>
-                                                        (stateManager.settingsTab = tab.label)
-                                                    }
-                                                >
-                                                    {tab.icon}
-                                                    {capitalizeFirstLetter(tab.label.toLowerCase())}
-                                                </Button>
-                                            ))}
-                                        </div>
                                     </div>
                                     <Separator orientation="vertical" className="h-full" />
                                     {/* Right content */}

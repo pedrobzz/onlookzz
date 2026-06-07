@@ -1,99 +1,46 @@
 import { useEditorEngine } from '@/components/store/editor';
 import { useStateManager } from '@/components/store/state';
+import { convexApi } from '@/convex/api';
 import { transKeys } from '@/i18n/keys';
-import { api } from '@/trpc/react';
-import { ProductType } from '@onlook/stripe';
-import { Badge } from '@onlook/ui/badge';
 import { Button } from '@onlook/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@onlook/ui/dropdown-menu';
 import { Icons } from '@onlook/ui/icons';
-import { toast } from '@onlook/ui/sonner';
 import { cn } from '@onlook/ui/utils';
+import { useQuery } from 'convex/react';
 import { observer } from 'mobx-react-lite';
 import { useTranslations } from 'next-intl';
-import { redirect } from 'next/navigation';
-import { usePostHog } from 'posthog-js/react';
-import { useRef, useState } from 'react';
-import { CloneProjectDialog } from '../clone-project-dialog';
-import { NewProjectMenu } from './new-project-menu';
-import { RecentProjectsMenu } from './recent-projects';
+import { useRouter } from 'next/navigation';
+
+type LocalProject = {
+    projectId: string;
+    name: string;
+};
 
 export const ProjectBreadcrumb = observer(() => {
     const editorEngine = useEditorEngine();
     const stateManager = useStateManager();
-    const posthog = usePostHog();
-    const { data: project } = api.project.get.useQuery({ projectId: editorEngine.projectId });
-    const { data: subscription } = api.subscription.get.useQuery();
-    const isPro = subscription?.product.type === ProductType.PRO;
+    const router = useRouter();
+    const project = useQuery(convexApi.projects.get, { projectId: editorEngine.projectId }) as LocalProject | null | undefined;
     const t = useTranslations();
-    const closeTimeoutRef = useRef<Timer | null>(null);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [isClosingProject, setIsClosingProject] = useState(false);
-    const [isDownloading, setIsDownloading] = useState(false);
-    const [showCloneDialog, setShowCloneDialog] = useState(false);
 
-    async function handleNavigateToProjects(_route?: 'create' | 'import') {
+    async function handleNavigateToProjects() {
         try {
-            setIsClosingProject(true);
-
             editorEngine.screenshot.captureScreenshot();
         } catch (error) {
             console.error('Failed to take screenshots:', error);
         } finally {
-            setTimeout(() => {
-                setIsClosingProject(false);
-                redirect('/projects');
-            }, 100);
-        }
-    }
-
-    async function handleDownloadCode() {
-        if (!project) {
-            console.error('No project found');
-            return;
-        }
-
-        try {
-            setIsDownloading(true);
-
-            const result = await editorEngine.activeSandbox.downloadFiles(project.name);
-
-            if (result) {
-                window.open(result.downloadUrl, '_blank');
-
-                posthog.capture('download_project_code', {
-                    projectId: project.id,
-                    projectName: project.name,
-                });
-
-                toast.success(t(transKeys.projects.actions.downloadSuccess));
-            } else {
-                throw new Error('Failed to generate download URL');
-            }
-        } catch (error) {
-            console.error('Download failed:', error);
-            toast.error(t(transKeys.projects.actions.downloadError), {
-                description: error instanceof Error ? error.message : 'Unknown error',
-            });
-
-            posthog.capture('download_project_code_failed', {
-                projectId: project.id,
-                error: error instanceof Error ? error.message : 'Unknown error',
-            });
-        } finally {
-            setIsDownloading(false);
+            router.push('/projects');
         }
     }
 
     return (
         <div className="mr-0 flex flex-row items-center text-small gap-2">
-            <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+            <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant='ghost'
@@ -102,30 +49,19 @@ export const ProjectBreadcrumb = observer(() => {
                         <Icons.OnlookLogo
                             className={cn(
                                 'w-9 h-9 hidden md:block',
-                                isClosingProject && 'animate-pulse',
                             )}
                         />
                         <span className="mx-0 max-w-[60px] md:max-w-[100px] lg:max-w-[200px] px-0 text-foreground-onlook text-small truncate cursor-pointer group-hover:text-foreground-active">
-                            {isClosingProject ? 'Stopping project...' : project?.name}
+                            {project?.name ?? editorEngine.projectName}
                         </span>
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                     align="start"
                     className="w-56"
-                    onMouseEnter={() => {
-                        if (closeTimeoutRef.current) {
-                            clearTimeout(closeTimeoutRef.current);
-                        }
-                    }}
-                    onMouseLeave={() => {
-                        closeTimeoutRef.current = setTimeout(() => {
-                            setIsDropdownOpen(false);
-                        }, 300);
-                    }}
                 >
                     <DropdownMenuItem
-                        onClick={() => handleNavigateToProjects()}
+                        onClick={handleNavigateToProjects}
                         className="cursor-pointer"
                     >
                         <div className="flex flex-row center items-center group">
@@ -133,26 +69,6 @@ export const ProjectBreadcrumb = observer(() => {
                             {t(transKeys.projects.actions.goToAllProjects)}
                         </div>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <RecentProjectsMenu />
-                    <DropdownMenuSeparator />
-                    <NewProjectMenu onShowCloneDialog={setShowCloneDialog} />
-                    <DropdownMenuItem
-                        onClick={handleDownloadCode}
-                        disabled={isDownloading || !isPro}
-                        className="cursor-pointer"
-                    >
-                        <div className="flex flex-row center items-center justify-between group w-full">
-                            <div className="flex flex-row center items-center">
-                                <Icons.Download className="mr-2" />
-                                {isDownloading
-                                    ? t(transKeys.projects.actions.downloadingCode)
-                                    : t(transKeys.projects.actions.downloadCode)}
-                            </div>
-                            <Badge variant="secondary" className="ml-2 text-xs bg-blue-400 text-white rounded-full p-0.5 px-1.5">PRO</Badge>
-                        </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                         className="cursor-pointer"
                         onClick={() => (stateManager.isSettingsModalOpen = true)}
@@ -164,12 +80,6 @@ export const ProjectBreadcrumb = observer(() => {
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-
-            <CloneProjectDialog
-                isOpen={showCloneDialog}
-                onClose={() => setShowCloneDialog(false)}
-                projectName={project?.name}
-            />
         </div>
     );
 });
