@@ -53,7 +53,7 @@ describe('Prompt', () => {
                     content: 'test',
                     type: MessageContextType.FILE,
                     displayName: 'test.txt',
-                    branchId: 'test',
+                    projectId: 'test',
                 },
 
                 {
@@ -63,14 +63,14 @@ describe('Prompt', () => {
                     content: 'test',
                     type: MessageContextType.HIGHLIGHT,
                     displayName: 'test.txt',
-                    branchId: 'test',
+                    projectId: 'test',
                 },
 
                 {
                     content: 'test',
                     type: MessageContextType.ERROR,
                     displayName: 'test',
-                    branchId: 'test',
+                    projectId: 'test',
                 },
                 {
                     path: 'test-rule.md',
@@ -123,14 +123,14 @@ describe('Prompt', () => {
                     content: 'test',
                     type: MessageContextType.FILE,
                     displayName: 'test.txt',
-                    branchId: 'test',
+                    projectId: 'test',
                 },
                 {
                     path: 'test2.txt',
                     content: 'test2',
                     type: MessageContextType.FILE,
                     displayName: 'test2.txt',
-                    branchId: 'test',
+                    projectId: 'test',
                 },
             ],
             [
@@ -141,7 +141,7 @@ describe('Prompt', () => {
                     content: 'test',
                     type: MessageContextType.HIGHLIGHT,
                     displayName: 'test.txt',
-                    branchId: 'test',
+                    projectId: 'test',
                 },
             ],
         );
@@ -165,7 +165,7 @@ describe('Prompt', () => {
                 content: 'test',
                 type: MessageContextType.HIGHLIGHT,
                 displayName: 'test.txt',
-                branchId: 'test',
+                projectId: 'test',
             },
             {
                 path: 'test.txt',
@@ -174,7 +174,7 @@ describe('Prompt', () => {
                 content: 'test2',
                 type: MessageContextType.HIGHLIGHT,
                 displayName: 'test.txt',
-                branchId: 'test',
+                projectId: 'test',
             },
         ], 'test');
         if (SHOULD_WRITE_HIGHLIGHTS) {

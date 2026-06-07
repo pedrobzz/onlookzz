@@ -10,7 +10,7 @@ describe('HighlightContext', () => {
         end: 10,
         content: 'const handleClick = () => {\n  console.log("clicked");\n};',
         displayName: 'Button.tsx',
-        branchId: 'feature-branch-456',
+        projectId: 'feature-project-456',
         ...overrides,
     });
 
@@ -34,7 +34,7 @@ describe('HighlightContext', () => {
             const prompt = HighlightContext.getPrompt(context);
 
             expect(prompt).toContain('<path>src/components/Button.tsx#L5:L10</path>');
-            expect(prompt).toContain('<branch>id: "feature-branch-456"</branch>');
+            expect(prompt).toContain('<project>id: "feature-project-456"</project>');
             expect(prompt).toContain('```');
             expect(prompt).toContain('const handleClick = () => {');
             expect(prompt).toContain('console.log("clicked");');
@@ -69,7 +69,7 @@ describe('HighlightContext', () => {
             const prompt = HighlightContext.getPrompt(context);
 
             expect(prompt).toContain('<path>src/components/Button.tsx#L5:L10</path>');
-            expect(prompt).toContain('<branch>id: "feature-branch-456"</branch>');
+            expect(prompt).toContain('<project>id: "feature-project-456"</project>');
             expect(prompt).toContain('```');
         });
 
@@ -92,13 +92,13 @@ describe('HighlightContext', () => {
             expect(prompt).toContain('<path>src/components/Button & Icon.tsx#L5:L10</path>');
         });
 
-        test('should handle branch ID with special characters', () => {
+        test('should handle project ID with special characters', () => {
             const context = createMockHighlightContext({
-                branchId: 'feature/user-auth-&-validation',
+                projectId: 'project/user-auth-&-validation',
             });
             const prompt = HighlightContext.getPrompt(context);
 
-            expect(prompt).toContain('<branch>id: "feature/user-auth-&-validation"</branch>');
+            expect(prompt).toContain('<project>id: "project/user-auth-&-validation"</project>');
         });
 
         test('should handle zero line numbers', () => {
@@ -164,7 +164,7 @@ describe('HighlightContext', () => {
     describe('getHighlightsContent', () => {
         test('should generate content for single highlight', () => {
             const highlights = [createMockHighlightContext()];
-            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-branch-456');
+            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-project-456');
 
             expect(content).toContain('I am looking at this specific part of the file');
             expect(content).toContain('<highlight>');
@@ -185,7 +185,7 @@ describe('HighlightContext', () => {
                     content: 'export default Button;',
                 }),
             ];
-            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-branch-456');
+            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-project-456');
 
             expect(content).toContain('<highlight-1>');
             expect(content).toContain('<highlight-2>');
@@ -204,7 +204,7 @@ describe('HighlightContext', () => {
                     content: 'helper content',
                 }),
             ];
-            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-branch-456');
+            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-project-456');
 
             expect(content).toContain('button content');
             expect(content).not.toContain('helper content');
@@ -216,13 +216,13 @@ describe('HighlightContext', () => {
                     path: 'src/other/file.ts',
                 }),
             ];
-            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-branch-456');
+            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-project-456');
 
             expect(content).toBe('');
         });
 
         test('should return empty string for empty highlights array', () => {
-            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', [], 'feature-branch-456');
+            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', [], 'feature-project-456');
             expect(content).toBe('');
         });
 
@@ -232,7 +232,7 @@ describe('HighlightContext', () => {
                     path: 'src/Components/Button.tsx',
                 }),
             ];
-            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-branch-456');
+            const content = HighlightContext.getHighlightsContent('src/components/Button.tsx', highlights, 'feature-project-456');
 
             expect(content).toBe('');
         });
@@ -244,7 +244,7 @@ describe('HighlightContext', () => {
                     path: longPath,
                 }),
             ];
-            const content = HighlightContext.getHighlightsContent(longPath, highlights, 'feature-branch-456');
+            const content = HighlightContext.getHighlightsContent(longPath, highlights, 'feature-project-456');
 
             expect(content).toContain('I am looking at this specific part');
             expect(content).toContain(longPath);
@@ -291,13 +291,13 @@ describe('HighlightContext', () => {
             expect(prompt).toContain(longContent);
         });
 
-        test('should handle empty branch ID', () => {
+        test('should handle empty project ID', () => {
             const context = createMockHighlightContext({
-                branchId: '',
+                projectId: '',
             });
             const prompt = HighlightContext.getPrompt(context);
 
-            expect(prompt).toContain('<branch>id: ""</branch>');
+            expect(prompt).toContain('<project>id: ""</project>');
         });
 
         test('should handle whitespace-only content', () => {

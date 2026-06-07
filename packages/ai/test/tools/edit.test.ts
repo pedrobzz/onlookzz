@@ -16,14 +16,13 @@ describe('SearchReplaceEditTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new SearchReplaceEditTool();
         const result = await tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: '/test/file.ts',
             old_string: 'Hello',
             new_string: 'Hi',
@@ -42,15 +41,14 @@ describe('SearchReplaceEditTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new SearchReplaceEditTool();
         
         await expect(tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: '/test/file.ts',
             old_string: 'NotFound',
             new_string: 'Replacement',
@@ -70,14 +68,13 @@ describe('SearchReplaceEditTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new SearchReplaceEditTool();
         const result = await tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: '/test/file.ts',
             old_string: 'test',
             new_string: 'replacement',
@@ -88,22 +85,25 @@ describe('SearchReplaceEditTool', () => {
         expect(writtenContent).toBe('replacement replacement replacement');
     });
 
-    test('should handle missing file system', async () => {
+    test('should reject inactive projects', async () => {
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => null)
-            }
+            projectId: 'test-project',
+            fileSystem: {
+                initialize: mock(() => Promise.resolve()),
+                readFile: mock(() => Promise.resolve('')),
+                writeFile: mock(() => Promise.resolve(true)),
+            },
         } as unknown as EditorEngine;
 
         const tool = new SearchReplaceEditTool();
         
         await expect(tool.handle({
-            branchId: 'invalid-branch',
+            projectId: 'invalid-project',
             file_path: '/test/file.ts',
             old_string: 'test',
             new_string: 'replacement',
             replace_all: false,
-        }, mockEditorEngine)).rejects.toThrow('file system not found');
+        }, mockEditorEngine)).rejects.toThrow('project is not active');
     });
 });
 
@@ -120,14 +120,13 @@ describe('SearchReplaceMultiEditFileTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new SearchReplaceMultiEditFileTool();
         const result = await tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: '/test/file.ts',
             edits: [
                 { old_string: 'Hello', new_string: 'Hi', replace_all: false },
@@ -151,14 +150,13 @@ describe('SearchReplaceMultiEditFileTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new SearchReplaceMultiEditFileTool();
         const result = await tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: '/test/file.ts',
             edits: [],
         }, mockEditorEngine);
@@ -167,19 +165,22 @@ describe('SearchReplaceMultiEditFileTool', () => {
         expect(writtenContent).toBe('Hello world');
     });
 
-    test('should handle missing file system', async () => {
+    test('should reject inactive projects', async () => {
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => null)
-            }
+            projectId: 'test-project',
+            fileSystem: {
+                initialize: mock(() => Promise.resolve()),
+                readFile: mock(() => Promise.resolve('')),
+                writeFile: mock(() => Promise.resolve(true)),
+            },
         } as unknown as EditorEngine;
 
         const tool = new SearchReplaceMultiEditFileTool();
         
         await expect(tool.handle({
-            branchId: 'invalid-branch',
+            projectId: 'invalid-project',
             file_path: '/test/file.ts',
             edits: [{ old_string: 'test', new_string: 'replacement', replace_all: false }],
-        }, mockEditorEngine)).rejects.toThrow('file system not found');
+        }, mockEditorEngine)).rejects.toThrow('project is not active');
     });
 });

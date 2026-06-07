@@ -7,7 +7,7 @@ describe('ErrorContext', () => {
         type: MessageContextType.ERROR,
         content: 'TypeError: Cannot read property "length" of undefined\n    at Button.tsx:15:20\n    at render',
         displayName: 'Runtime Error',
-        branchId: 'main-branch-123',
+        projectId: 'main-project-123',
         ...overrides,
     });
 
@@ -30,7 +30,7 @@ describe('ErrorContext', () => {
             const context = createMockErrorContext();
             const prompt = ErrorContext.getPrompt(context);
 
-            expect(prompt).toContain('<branch>id: "main-branch-123"</branch>');
+            expect(prompt).toContain('<project>id: "main-project-123"</project>');
             expect(prompt).toContain('<error>');
             expect(prompt).toContain('TypeError: Cannot read property "length" of undefined');
             expect(prompt).toContain('at Button.tsx:15:20');
@@ -52,7 +52,7 @@ describe('ErrorContext', () => {
             });
             const prompt = ErrorContext.getPrompt(context);
 
-            expect(prompt).toContain('<branch>id: "main-branch-123"</branch>');
+            expect(prompt).toContain('<project>id: "main-project-123"</project>');
             expect(prompt).toContain('<error></error>');
         });
 
@@ -79,22 +79,22 @@ describe('ErrorContext', () => {
             expect(prompt).toContain('at async getData');
         });
 
-        test('should handle empty branch ID', () => {
+        test('should handle empty project ID', () => {
             const context = createMockErrorContext({
-                branchId: '',
+                projectId: '',
             });
             const prompt = ErrorContext.getPrompt(context);
 
-            expect(prompt).toContain('<branch>id: ""</branch>');
+            expect(prompt).toContain('<project>id: ""</project>');
         });
 
-        test('should handle branch ID with special characters', () => {
+        test('should handle project ID with special characters', () => {
             const context = createMockErrorContext({
-                branchId: 'feature/fix-bug-&-improve',
+                projectId: 'project/fix-bug-&-improve',
             });
             const prompt = ErrorContext.getPrompt(context);
 
-            expect(prompt).toContain('<branch>id: "feature/fix-bug-&-improve"</branch>');
+            expect(prompt).toContain('<project>id: "project/fix-bug-&-improve"</project>');
         });
 
         test('should handle very long error messages', () => {
@@ -162,7 +162,7 @@ describe('ErrorContext', () => {
             expect(content).toContain('You are helping debug a Next.js React app');
             expect(content).toContain('This project uses Bun as the package manager');
             expect(content).toContain('<errors>');
-            expect(content).toContain('<branch>id: "main-branch-123"</branch>');
+            expect(content).toContain('<project>id: "main-project-123"</project>');
             expect(content).toContain('TypeError: Cannot read property "length"');
             expect(content).toContain('</errors>');
         });
@@ -171,19 +171,19 @@ describe('ErrorContext', () => {
             const errors = [
                 createMockErrorContext({
                     content: 'Error 1: Component not found',
-                    branchId: 'branch-1',
+                    projectId: 'project-1',
                 }),
                 createMockErrorContext({
                     content: 'Error 2: Missing dependency',
-                    branchId: 'branch-2',
+                    projectId: 'project-2',
                 }),
             ];
             const content = ErrorContext.getErrorsContent(errors);
 
             expect(content).toContain('Error 1: Component not found');
             expect(content).toContain('Error 2: Missing dependency');
-            expect(content).toContain('<branch>id: "branch-1"</branch>');
-            expect(content).toContain('<branch>id: "branch-2"</branch>');
+            expect(content).toContain('<project>id: "project-1"</project>');
+            expect(content).toContain('<project>id: "project-2"</project>');
         });
 
         test('should return empty string for empty errors array', () => {
@@ -269,7 +269,7 @@ describe('ErrorContext', () => {
                 type: MessageContextType.ERROR,
                 content: 'Basic error',
                 displayName: null,
-                branchId: undefined,
+                projectId: undefined,
             } as any;
 
             expect(() => ErrorContext.getPrompt(context)).not.toThrow();

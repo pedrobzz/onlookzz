@@ -10,14 +10,13 @@ describe('ReadFileTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new ReadFileTool();
         const result = await tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: './test.txt'
         }, mockEditorEngine);
 
@@ -32,14 +31,13 @@ describe('ReadFileTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new ReadFileTool();
         const result = await tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: './test.txt',
             offset: 2,
             limit: 2
@@ -58,14 +56,13 @@ describe('ReadFileTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new ReadFileTool();
         const result = await tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: './large.txt'
         }, mockEditorEngine);
 
@@ -80,31 +77,32 @@ describe('ReadFileTool', () => {
         };
 
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => ({ codeEditor: mockFileSystem }))
-            }
+            projectId: 'test-project',
+            fileSystem: mockFileSystem,
         } as unknown as EditorEngine;
 
         const tool = new ReadFileTool();
         
         await expect(tool.handle({
-            branchId: 'test-branch',
+            projectId: 'test-project',
             file_path: './binary.bin'
         }, mockEditorEngine)).rejects.toThrow('file is not text');
     });
 
-    test('should handle missing file system', async () => {
+    test('should reject inactive projects', async () => {
         const mockEditorEngine = {
-            branches: {
-                getBranchDataById: mock(() => null)
-            }
+            projectId: 'test-project',
+            fileSystem: {
+                initialize: mock(() => Promise.resolve()),
+                readFile: mock(() => Promise.resolve('')),
+            },
         } as unknown as EditorEngine;
 
         const tool = new ReadFileTool();
         
         await expect(tool.handle({
-            branchId: 'invalid-branch',
+            projectId: 'invalid-project',
             file_path: './test.txt'
-        }, mockEditorEngine)).rejects.toThrow('file system not found');
+        }, mockEditorEngine)).rejects.toThrow('project is not active');
     });
 });

@@ -8,7 +8,7 @@ describe('FileContext', () => {
         path: 'src/components/Button.tsx',
         content: 'export const Button = () => <button>Click me</button>;',
         displayName: 'Button.tsx',
-        branchId: 'main-branch-123',
+        projectId: 'main-project-123',
         ...overrides,
     });
 
@@ -19,7 +19,7 @@ describe('FileContext', () => {
         end: 2,
         content: 'export const Button',
         displayName: 'Button.tsx',
-        branchId: 'main-branch-123',
+        projectId: 'main-project-123',
         ...overrides,
     });
 
@@ -43,7 +43,7 @@ describe('FileContext', () => {
             const prompt = FileContext.getPrompt(context);
 
             expect(prompt).toContain('<path>src/components/Button.tsx</path>');
-            expect(prompt).toContain('<branch>id: "main-branch-123"</branch>');
+            expect(prompt).toContain('<project>id: "main-project-123"</project>');
             expect(prompt).toContain('```tsx');
             expect(prompt).toContain('export const Button = () => <button>Click me</button>;');
             expect(prompt).toContain('```');
@@ -80,7 +80,7 @@ describe('FileContext', () => {
             const prompt = FileContext.getPrompt(context);
 
             expect(prompt).toContain('<path>src/components/Button.tsx</path>');
-            expect(prompt).toContain('<branch>id: "main-branch-123"</branch>');
+            expect(prompt).toContain('<project>id: "main-project-123"</project>');
             expect(prompt).toContain('```tsx');
             expect(prompt).toContain('```');
         });
@@ -103,13 +103,13 @@ describe('FileContext', () => {
             expect(prompt).toContain('<path>src/very/deep/nested/folder/structure/with/many/levels/Component.tsx</path>');
         });
 
-        test('should handle branch IDs with special characters', () => {
+        test('should handle project IDs with special characters', () => {
             const context = createMockFileContext({
-                branchId: 'feature/user-auth-&-permissions',
+                projectId: 'project/user-auth-&-permissions',
             });
             const prompt = FileContext.getPrompt(context);
 
-            expect(prompt).toContain('<branch>id: "feature/user-auth-&-permissions"</branch>');
+            expect(prompt).toContain('<project>id: "project/user-auth-&-permissions"</project>');
         });
     });
 
@@ -221,7 +221,7 @@ describe('FileContext', () => {
 
             expect(content).toContain('This context originally included the content of files');
             expect(content).toContain('<path>src/components/Button.tsx</path>');
-            expect(content).toContain('<branch>id: "main-branch-123"</branch>');
+            expect(content).toContain('<project>id: "main-project-123"</project>');
             expect(content).not.toContain('```');
             expect(content).not.toContain('export const Button');
         });
@@ -250,11 +250,11 @@ describe('FileContext', () => {
                 path: 'test.ts',
                 content: 'test',
                 displayName: 'test.ts',
-                branchId: '',
+                projectId: '',
             } as FileMessageContext;
 
             const prompt = FileContext.getPrompt(context);
-            expect(prompt).toContain('<branch>id: ""</branch>');
+            expect(prompt).toContain('<project>id: ""</project>');
         });
 
         test('should handle unicode characters in content', () => {

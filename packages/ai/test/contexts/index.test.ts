@@ -4,10 +4,8 @@ import {
     type FileMessageContext,
     type HighlightMessageContext,
     type ErrorMessageContext,
-    type BranchMessageContext,
     type ImageMessageContext,
     type AgentRuleMessageContext,
-    type Branch,
 } from '@onlook/models';
 import { describe, expect, test } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,31 +16,18 @@ import {
     FileContext,
     HighlightContext,
     ErrorContext,
-    BranchContext,
     ImageContext,
     AgentRuleContext,
 } from '../../src/contexts';
 
 describe('Context Index', () => {
-    const createMockBranch = (): Branch => ({
-        id: 'test-branch-id',
-        projectId: 'test-project-id',
-        name: 'test-branch',
-        description: 'Test branch description',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isDefault: false,
-        git: null,
-        sandbox: { id: 'test-sandbox' },
-    });
-
     const createMockContexts = () => ({
         file: {
             type: MessageContextType.FILE,
             path: 'src/test.ts',
             content: 'console.log("test");',
             displayName: 'test.ts',
-            branchId: 'branch-123',
+            projectId: 'project-123',
         } as FileMessageContext,
         
         highlight: {
@@ -52,22 +37,15 @@ describe('Context Index', () => {
             end: 5,
             content: 'console.log("test");',
             displayName: 'test.ts',
-            branchId: 'branch-123',
+            projectId: 'project-123',
         } as HighlightMessageContext,
         
         error: {
             type: MessageContextType.ERROR,
             content: 'TypeError: Cannot read property',
             displayName: 'Runtime Error',
-            branchId: 'branch-123',
+            projectId: 'project-123',
         } as ErrorMessageContext,
-        
-        branch: {
-            type: MessageContextType.BRANCH,
-            content: 'Working on feature implementation',
-            displayName: 'Feature Branch',
-            branch: createMockBranch(),
-        } as BranchMessageContext,
         
         image: {
             type: MessageContextType.IMAGE,
@@ -91,7 +69,7 @@ describe('Context Index', () => {
             const prompt = getContextPrompt(contexts.file);
 
             expect(prompt).toContain('<path>src/test.ts</path>');
-            expect(prompt).toContain('<branch>id: "branch-123"</branch>');
+            expect(prompt).toContain('<project>id: "project-123"</project>');
             expect(prompt).toContain('```ts');
             expect(prompt).toContain('console.log("test");');
         });
@@ -101,7 +79,7 @@ describe('Context Index', () => {
             const prompt = getContextPrompt(contexts.highlight);
 
             expect(prompt).toContain('<path>src/test.ts#L1:L5</path>');
-            expect(prompt).toContain('<branch>id: "branch-123"</branch>');
+            expect(prompt).toContain('<project>id: "project-123"</project>');
             expect(prompt).toContain('```');
             expect(prompt).toContain('console.log("test");');
         });
@@ -110,16 +88,8 @@ describe('Context Index', () => {
             const contexts = createMockContexts();
             const prompt = getContextPrompt(contexts.error);
 
-            expect(prompt).toContain('<branch>id: "branch-123"</branch>');
+            expect(prompt).toContain('<project>id: "project-123"</project>');
             expect(prompt).toContain('<error>TypeError: Cannot read property</error>');
-        });
-
-        test('should route to correct context class for BRANCH type', () => {
-            const contexts = createMockContexts();
-            const prompt = getContextPrompt(contexts.branch);
-
-            expect(prompt).toContain('Branch: test-branch (test-branch-id)');
-            expect(prompt).toContain('Description: Working on feature implementation');
         });
 
         test('should route to correct context class for IMAGE type', () => {
@@ -160,8 +130,6 @@ describe('Context Index', () => {
                 .toBe(HighlightContext.getPrompt(contexts.highlight));
             expect(getContextPrompt(contexts.error))
                 .toBe(ErrorContext.getPrompt(contexts.error));
-            expect(getContextPrompt(contexts.branch))
-                .toBe(BranchContext.getPrompt(contexts.branch));
             expect(getContextPrompt(contexts.image))
                 .toBe(ImageContext.getPrompt(contexts.image));
             expect(getContextPrompt(contexts.agentRule))
@@ -191,13 +159,6 @@ describe('Context Index', () => {
             expect(label).toBe('Runtime Error');
         });
 
-        test('should route to correct context class for BRANCH type', () => {
-            const contexts = createMockContexts();
-            const label = getContextLabel(contexts.branch);
-
-            expect(label).toBe('Feature Branch');
-        });
-
         test('should route to correct context class for IMAGE type', () => {
             const contexts = createMockContexts();
             const label = getContextLabel(contexts.image);
@@ -222,8 +183,6 @@ describe('Context Index', () => {
                 .toBe(HighlightContext.getLabel(contexts.highlight));
             expect(getContextLabel(contexts.error))
                 .toBe(ErrorContext.getLabel(contexts.error));
-            expect(getContextLabel(contexts.branch))
-                .toBe(BranchContext.getLabel(contexts.branch));
             expect(getContextLabel(contexts.image))
                 .toBe(ImageContext.getLabel(contexts.image));
             expect(getContextLabel(contexts.agentRule))
@@ -260,11 +219,6 @@ describe('Context Index', () => {
             expect(contextClass).toBe(ErrorContext);
         });
 
-        test('should return BranchContext for BRANCH type', () => {
-            const contextClass = getContextClass(MessageContextType.BRANCH);
-            expect(contextClass).toBe(BranchContext);
-        });
-
         test('should return ImageContext for IMAGE type', () => {
             const contextClass = getContextClass(MessageContextType.IMAGE);
             expect(contextClass).toBe(ImageContext);
@@ -299,7 +253,6 @@ describe('Context Index', () => {
             expect(FileContext).toBeDefined();
             expect(HighlightContext).toBeDefined();
             expect(ErrorContext).toBeDefined();
-            expect(BranchContext).toBeDefined();
             expect(ImageContext).toBeDefined();
             expect(AgentRuleContext).toBeDefined();
         });
@@ -308,7 +261,6 @@ describe('Context Index', () => {
             expect(FileContext.contextType).toBe(MessageContextType.FILE);
             expect(HighlightContext.contextType).toBe(MessageContextType.HIGHLIGHT);
             expect(ErrorContext.contextType).toBe(MessageContextType.ERROR);
-            expect(BranchContext.contextType).toBe(MessageContextType.BRANCH);
             expect(ImageContext.contextType).toBe(MessageContextType.IMAGE);
             expect(AgentRuleContext.contextType).toBe(MessageContextType.AGENT_RULE);
         });
@@ -321,7 +273,6 @@ describe('Context Index', () => {
                 contexts.file,
                 contexts.highlight,
                 contexts.error,
-                contexts.branch,
                 contexts.image,
                 contexts.agentRule,
             ];
@@ -329,15 +280,14 @@ describe('Context Index', () => {
             const prompts = contextArray.map(context => getContextPrompt(context));
             const labels = contextArray.map(context => getContextLabel(context));
 
-            expect(prompts).toHaveLength(6);
-            expect(labels).toHaveLength(6);
+            expect(prompts).toHaveLength(5);
+            expect(labels).toHaveLength(5);
             
             expect(prompts[0]).toContain('```ts');
             expect(prompts[1]).toContain('#L1:L5');
             expect(prompts[2]).toContain('<error>');
-            expect(prompts[3]).toContain('Branch: test-branch');
-            expect(prompts[4]).toBe('[Image: image/png]');
-            expect(prompts[5]).toContain('# Project Rules');
+            expect(prompts[3]).toBe('[Image: image/png]');
+            expect(prompts[4]).toContain('# Project Rules');
         });
 
         test('should maintain context type consistency', () => {
@@ -359,7 +309,7 @@ describe('Context Index', () => {
                 path: 'test.ts',
                 content: '',
                 displayName: 'test.ts',
-                branchId: '',
+                projectId: '',
             } as FileMessageContext;
 
             expect(() => getContextPrompt(minimalFile)).not.toThrow();
@@ -375,7 +325,6 @@ describe('Context Index', () => {
                 contexts.file,
                 contexts.highlight,
                 contexts.error,
-                contexts.branch,
                 contexts.image,
                 contexts.agentRule,
             ];
@@ -396,14 +345,14 @@ describe('Context Index', () => {
                     path: 'test.js',
                     content: 'test',
                     displayName: '',
-                    branchId: '',
+                    projectId: '',
                 } as FileMessageContext,
                 
                 error: {
                     type: MessageContextType.ERROR,
                     content: 'Error message',
                     displayName: '',
-                    branchId: '',
+                    projectId: '',
                 } as ErrorMessageContext,
             };
 
