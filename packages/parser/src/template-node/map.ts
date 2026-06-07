@@ -12,11 +12,11 @@ import { createTemplateNode } from './helpers';
 export function createTemplateNodeMap({
     ast,
     filename,
-    branchId,
+    projectId,
 }: {
     ast: T.File;
     filename: string;
-    branchId: string;
+    projectId: string;
 }): Map<string, TemplateNode> {
     const mapping = new Map<string, TemplateNode>();
     const componentStack: string[] = [];
@@ -107,7 +107,7 @@ export function createTemplateNodeMap({
 
             const newTemplateNode = createTemplateNode(
                 path,
-                branchId,
+                projectId,
                 filename,
                 componentStack,
                 dynamicType,

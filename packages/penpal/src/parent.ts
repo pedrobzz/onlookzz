@@ -2,7 +2,7 @@ import type { LayerNode } from '@onlook/models';
 
 export type PenpalParentMethods = {
     getFrameId: () => string;
-    getBranchId: () => string;
+    getProjectId: () => string;
     onWindowMutated: (data: {
         added: Record<string, LayerNode>;
         removed: Record<string, LayerNode>;

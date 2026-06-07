@@ -2,14 +2,14 @@ import type { CodeDiffRequest } from '@onlook/models/code';
 
 export async function getOrCreateCodeDiffRequest(
     oid: string,
-    branchId: string,
+    projectId: string,
     oidToCodeChange: Map<string, CodeDiffRequest>,
 ): Promise<CodeDiffRequest> {
     let diffRequest = oidToCodeChange.get(oid);
     if (!diffRequest) {
         diffRequest = {
             oid,
-            branchId,
+            projectId,
             structureChanges: [],
             attributes: {},
             textContent: null,

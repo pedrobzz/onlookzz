@@ -130,7 +130,7 @@ export class StyleManager {
             };
             const target: StyleActionTarget = {
                 frameId: selectedEl.frameId,
-                branchId: selectedEl.branchId,
+                projectId: selectedEl.projectId,
                 domId: selectedEl.domId,
                 oid: this.mode === StyleMode.Instance ? selectedEl.instanceId : selectedEl.oid,
                 change: change,

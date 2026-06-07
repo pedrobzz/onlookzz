@@ -1188,7 +1188,7 @@ export class ThemeManager {
                             if (oid) {
                                 updates.set(oid, {
                                     oid,
-                                    branchId: projectId,
+                                    projectId: projectId,
                                     attributes: { className: newClasses.join(' ') },
                                     overrideClasses: true,
                                     textContent: null,

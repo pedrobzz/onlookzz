@@ -27,7 +27,7 @@ export class CodeManager {
         try {
             // TODO: This is a hack to write code, we should refactor this
             if (action.type === 'write-code' && action.diffs[0]) {
-                // Write-code actions don't have branch context, use active editor
+                // Write-code actions use the active editor project.
                 await this.editorEngine.fileSystem.writeFile(
                     action.diffs[0].path,
                     action.diffs[0].generated,

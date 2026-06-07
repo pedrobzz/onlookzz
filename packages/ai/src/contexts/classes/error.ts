@@ -19,14 +19,14 @@ IMPORTANT: This project uses Bun as the package manager. Always use Bun commands
 - Use "bun install" instead of "npm install"
 - Use "bun add" instead of "npm install <package>"
 - Use "bun run" instead of "npm run"
-- Use "bunx" instead of "npx"
+    - Use "bunx" instead of "npx"
 
 NEVER SUGGEST THE "bun run dev" command. Assume the user is already running the app.`;
 
     static getPrompt(context: ErrorMessageContext): string {
-        const branchDisplay = ErrorContext.getBranchContent(context.branchId);
+        const projectDisplay = ErrorContext.getProjectContent(context.projectId);
         const errorDisplay = wrapXml('error', context.content);
-        return `${branchDisplay}\n${errorDisplay}\n`;
+        return `${projectDisplay}\n${errorDisplay}\n`;
     }
 
     static getLabel(context: ErrorMessageContext): string {
@@ -49,7 +49,7 @@ NEVER SUGGEST THE "bun run dev" command. Assume the user is already running the 
         return prompt;
     }
 
-    private static getBranchContent(id: string): string {
-        return wrapXml('branch', `id: "${id}"`);
+    private static getProjectContent(id: string): string {
+        return wrapXml('project', `id: "${id}"`);
     }
 }

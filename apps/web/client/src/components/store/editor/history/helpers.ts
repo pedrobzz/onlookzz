@@ -109,7 +109,7 @@ export function undoAction(action: Action): Action {
                 },
                 children: action.children.map((child) => ({
                     frameId: child.frameId,
-                    branchId: child.branchId,
+                    projectId: child.projectId,
                     domId: child.domId,
                     oid: child.oid,
                 })),
@@ -129,7 +129,7 @@ export function undoAction(action: Action): Action {
                 },
                 children: action.children.map((child) => ({
                     frameId: child.frameId,
-                    branchId: child.branchId,
+                    projectId: child.projectId,
                     domId: child.domId,
                     oid: child.oid,
                 })),
@@ -209,7 +209,7 @@ export function getCleanedElement(
         children: [],
         domId,
         oid,
-        branchId: copiedEl.branchId,
+        projectId: copiedEl.projectId,
     };
 
     // Process children recursively
@@ -252,7 +252,7 @@ export function transformRedoAction(action: Action): Action {
                 },
                 children: action.children.map((child) => ({
                     frameId: child.frameId,
-                    branchId: child.branchId,
+                    projectId: child.projectId,
                     domId: child.domId,
                     oid: child.oid,
                 })),

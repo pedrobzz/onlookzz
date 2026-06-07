@@ -1,8 +1,8 @@
 import stripAnsi from 'strip-ansi';
 
 export interface ParsedError {
-    branchId: string;
-    branchName: string;
+    projectId: string;
+    projectName: string;
     sourceId: string;
     type: 'frame' | 'terminal' | 'apply-code';
     content: string;

@@ -126,14 +126,14 @@ export class GroupManager {
 
         const parentTarget: ActionTarget = {
             frameId: frameId,
-            branchId: frame.frame.branchId,
+            projectId: frame.frame.projectId,
             domId: anyParent.domId,
             oid: anyParent.oid,
         };
 
         const children: ActionTarget[] = selectedEls.map((el) => ({
             frameId: el.frameId,
-            branchId: el.branchId,
+            projectId: el.projectId,
             domId: el.domId,
             oid: el.oid,
         }));
@@ -187,7 +187,7 @@ export class GroupManager {
 
         const parent: ActionTarget = {
             frameId: selectedEl.frameId,
-            branchId: selectedEl.branchId,
+            projectId: selectedEl.projectId,
             domId: selectedEl.parent.domId,
             oid: selectedEl.parent.oid,
         };
@@ -196,7 +196,7 @@ export class GroupManager {
         const targets: ActionTarget[] = actionContainer.children.map((child) => {
             return {
                 frameId: selectedEl.frameId,
-                branchId: selectedEl.branchId,
+                projectId: selectedEl.projectId,
                 domId: child.domId,
                 oid: child.oid,
             };

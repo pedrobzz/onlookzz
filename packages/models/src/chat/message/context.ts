@@ -1,11 +1,8 @@
-import type { Branch } from '../../project';
-
 export enum MessageContextType {
     FILE = 'file',
     HIGHLIGHT = 'highlight',
     IMAGE = 'image',
     ERROR = 'error',
-    BRANCH = 'branch',
     AGENT_RULE = 'agent_rule',
 }
 
@@ -15,15 +12,10 @@ type BaseMessageContext = {
     displayName: string;
 };
 
-export type BranchMessageContext = BaseMessageContext & {
-    type: MessageContextType.BRANCH;
-    branch: Branch;
-};
-
 export type FileMessageContext = BaseMessageContext & {
     type: MessageContextType.FILE;
     path: string;
-    branchId: string;
+    projectId: string;
 };
 
 export type HighlightMessageContext = BaseMessageContext & {
@@ -32,7 +24,7 @@ export type HighlightMessageContext = BaseMessageContext & {
     start: number;
     end: number;
     oid?: string;
-    branchId: string;
+    projectId: string;
 };
 
 export type ImageMessageContext = BaseMessageContext & {
@@ -41,12 +33,12 @@ export type ImageMessageContext = BaseMessageContext & {
     id?: string;
     source: 'external' | 'local';
     path?: string;
-    branchId?: string;
+    projectId?: string;
 };
 
 export type ErrorMessageContext = BaseMessageContext & {
     type: MessageContextType.ERROR;
-    branchId: string;
+    projectId: string;
 };
 
 export type AgentRuleMessageContext = BaseMessageContext & {
@@ -59,5 +51,4 @@ export type MessageContext =
     | ImageMessageContext
     | ErrorMessageContext
     | AgentRuleMessageContext
-    | BranchMessageContext
     | FileMessageContext;

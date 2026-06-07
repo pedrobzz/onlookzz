@@ -90,7 +90,7 @@ export class CopyManager {
             (selectedEl) => {
                 const target: ActionTarget = {
                     frameId: selectedEl.frameId,
-                    branchId: selectedEl.branchId,
+                    projectId: selectedEl.projectId,
                     domId: selectedEl.domId,
                     oid: selectedEl.oid,
                 };

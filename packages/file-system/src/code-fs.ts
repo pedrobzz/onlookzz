@@ -150,7 +150,7 @@ export class CodeFileSystem extends FileSystem {
         const templateNodeMap = createTemplateNodeMap({
             ast,
             filename: path,
-            branchId: this.projectId,
+            projectId: this.projectId,
         });
 
         for (const [oid, node] of templateNodeMap.entries()) {
@@ -202,7 +202,7 @@ export class CodeFileSystem extends FileSystem {
                             const templateNodeMap = createTemplateNodeMap({
                                 ast,
                                 filename: entry.path,
-                                branchId: this.projectId,
+                                projectId: this.projectId,
                             });
 
                             for (const [oid, node] of templateNodeMap.entries()) {

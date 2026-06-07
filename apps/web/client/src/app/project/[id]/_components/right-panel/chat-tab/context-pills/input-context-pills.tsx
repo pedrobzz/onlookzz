@@ -9,7 +9,6 @@ import { DraftContextPill } from './draft-context-pill';
 import { ImagePill } from './image-pill';
 
 const typeOrder = {
-    [MessageContextType.BRANCH]: 0,
     [MessageContextType.FILE]: 1,
     [MessageContextType.HIGHLIGHT]: 2,
     [MessageContextType.ERROR]: 3,
@@ -20,15 +19,13 @@ const typeOrder = {
 const getStableKey = (context: MessageContext, index: number): string => {
     switch (context.type) {
         case MessageContextType.FILE:
-            return `file-${context.path}-${context.branchId}`;
+            return `file-${context.path}-${context.projectId}`;
         case MessageContextType.HIGHLIGHT:
-            return `highlight-${context.path}-${context.start}-${context.end}-${context.branchId}`;
+            return `highlight-${context.path}-${context.start}-${context.end}-${context.projectId}`;
         case MessageContextType.IMAGE:
             return `image-${context.id || index}`;
-        case MessageContextType.BRANCH:
-            return `branch-${context.branch.id}`;
         case MessageContextType.ERROR:
-            return `error-${context.branchId}`;
+            return `error-${context.projectId}`;
         case MessageContextType.AGENT_RULE:
             return `agent-rule-${context.path}`;
         default:

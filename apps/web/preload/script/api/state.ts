@@ -16,18 +16,18 @@ export function getFrameId(): string {
     return frameId;
 }
 
-export function setBranchId(branchId: string) {
-    (window as any)._onlookBranchId = branchId;
+export function setProjectId(projectId: string) {
+    (window as any)._onlookProjectId = projectId;
 }
 
-export function getBranchId(): string {
-    const branchId = (window as any)._onlookBranchId;
-    if (!branchId) {
-        console.warn('Branch id not found');
-        penpalParent?.getBranchId().then((id) => {
-            setBranchId(id);
+export function getProjectId(): string {
+    const projectId = (window as any)._onlookProjectId;
+    if (!projectId) {
+        console.warn('Project id not found');
+        penpalParent?.getProjectId().then((id) => {
+            setProjectId(id);
         });
         return '';
     }
-    return branchId;
+    return projectId;
 }

@@ -1,17 +1,9 @@
 import React, { memo, useEffect, useRef, useState } from 'react';
 import { nanoid } from 'nanoid';
 
-import type { ChatMessage, GitMessageCheckpoint } from '@onlook/models';
+import type { ChatMessage } from '@onlook/models';
 import { ChatType, MessageCheckpointType } from '@onlook/models';
 import { Button } from '@onlook/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@onlook/ui/dropdown-menu';
 import { Icons } from '@onlook/ui/icons';
 import { toast } from '@onlook/ui/sonner';
 import { Textarea } from '@onlook/ui/textarea';
@@ -24,7 +16,6 @@ import { restoreCheckpoint } from '@/components/store/editor/git';
 import { observer } from 'mobx-react-lite';
 import { SentContextPill } from '../context-pills/sent-context-pill';
 import { MessageContent } from './message-content';
-import { MultiBranchRevertModal } from './multi-branch-revert-modal';
 
 interface UserMessageProps {
     onEditMessage: EditMessage;
@@ -49,15 +40,11 @@ const UserMessageComponent = ({ onEditMessage, message }: UserMessageProps) => {
     const [editValue, setEditValue] = useState('');
     const [isComposing, setIsComposing] = useState(false);
     const [isRestoring, setIsRestoring] = useState(false);
-    const [isMultiBranchModalOpen, setIsMultiBranchModalOpen] = useState(false);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const gitCheckpoints =
         message.metadata?.checkpoints?.filter((s) => s.type === MessageCheckpointType.GIT) ?? [];
-
-    // Legacy checkpoints (created before multi-branch support) don't have branchId.
-    // If any exist, fall back to simple single-branch restore UI.
-    const hasLegacyCheckpoints = gitCheckpoints.some((cp) => !cp.branchId);
+    const checkpoint = gitCheckpoints.at(-1);
 
     useEffect(() => {
         if (isEditing && textareaRef.current) {
@@ -114,22 +101,14 @@ const UserMessageComponent = ({ onEditMessage, message }: UserMessageProps) => {
         });
     };
 
-    const handleRestoreSingleBranch = async (checkpoint: GitMessageCheckpoint) => {
+    const handleRestore = async () => {
+        if (!checkpoint) {
+            return;
+        }
         setIsRestoring(true);
         await restoreCheckpoint(checkpoint, editorEngine);
         setIsRestoring(false);
     };
-
-    const handleRestoreLegacy = async () => {
-        const firstCheckpoint = gitCheckpoints[0];
-        if (firstCheckpoint) {
-            setIsRestoring(true);
-            await restoreCheckpoint(firstCheckpoint, editorEngine);
-            setIsRestoring(false);
-        }
-    };
-
-    const getCheckpointName = () => editorEngine.projectName;
 
     function renderEditingInput() {
         return (
@@ -239,84 +218,29 @@ const UserMessageComponent = ({ onEditMessage, message }: UserMessageProps) => {
                     )}
                 </div>
             </div>
-            {gitCheckpoints.length > 0 && (
+            {checkpoint && (
                 <div className="absolute top-1/2 left-2 -translate-y-1/2">
-                    {hasLegacyCheckpoints ? (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <button
-                                    onClick={handleRestoreLegacy}
-                                    className={cn(
-                                        'rounded-md p-2 text-xs opacity-0 group-hover:opacity-100 hover:opacity-80',
-                                        isRestoring ? 'opacity-100' : 'opacity-0',
-                                    )}
-                                    disabled={isRestoring}
-                                >
-                                    {isRestoring ? (
-                                        <Icons.LoadingSpinner className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Icons.Reset className="h-4 w-4" />
-                                    )}
-                                </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" sideOffset={5}>
-                                {isRestoring ? 'Restoring...' : 'Restore to here'}
-                            </TooltipContent>
-                        </Tooltip>
-                    ) : (
-                        <>
-                            <Tooltip>
-                                <DropdownMenu>
-                                    <TooltipTrigger asChild>
-                                        <DropdownMenuTrigger asChild>
-                                            <button
-                                                className={cn(
-                                                    'rounded-md p-2 text-xs opacity-0 group-hover:opacity-100 hover:opacity-80',
-                                                    isRestoring ? 'opacity-100' : 'opacity-0',
-                                                )}
-                                                disabled={isRestoring}
-                                            >
-                                                {isRestoring ? (
-                                                    <Icons.LoadingSpinner className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <Icons.Reset className="h-4 w-4" />
-                                                )}
-                                            </button>
-                                        </DropdownMenuTrigger>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" sideOffset={5}>
-                                        {isRestoring ? 'Restoring...' : 'Restore to here'}
-                                    </TooltipContent>
-                                    <DropdownMenuContent align="start" side="right">
-                                        <DropdownMenuLabel>Restore Backup</DropdownMenuLabel>
-                                        {gitCheckpoints.map((checkpoint) => (
-                                            <DropdownMenuItem
-                                                key={checkpoint.branchId}
-                                                onClick={() => handleRestoreSingleBranch(checkpoint)}
-                                            >
-                                                {getCheckpointName()}
-                                            </DropdownMenuItem>
-                                        ))}
-                                        {gitCheckpoints.length > 1 && (
-                                            <>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem
-                                                    onClick={() => setIsMultiBranchModalOpen(true)}
-                                                >
-                                                    Select Multiple Backups...
-                                                </DropdownMenuItem>
-                                            </>
-                                        )}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </Tooltip>
-                            <MultiBranchRevertModal
-                                open={isMultiBranchModalOpen}
-                                onOpenChange={setIsMultiBranchModalOpen}
-                                checkpoints={gitCheckpoints}
-                            />
-                        </>
-                    )}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                onClick={handleRestore}
+                                className={cn(
+                                    'rounded-md p-2 text-xs opacity-0 group-hover:opacity-100 hover:opacity-80',
+                                    isRestoring ? 'opacity-100' : 'opacity-0',
+                                )}
+                                disabled={isRestoring}
+                            >
+                                {isRestoring ? (
+                                    <Icons.LoadingSpinner className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Icons.Reset className="h-4 w-4" />
+                                )}
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={5}>
+                            {isRestoring ? 'Restoring...' : 'Restore to here'}
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             )}
         </div>

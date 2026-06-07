@@ -24,7 +24,7 @@ import { getComputedStyleByDomId } from './elements/style';
 import { editText, isChildTextEditable, startEditingText, stopEditingText } from './elements/text';
 import { handleBodyReady } from './ready';
 import { captureScreenshot } from './screenshot';
-import { setFrameId, setBranchId } from './state';
+import { setFrameId, setProjectId } from './state';
 import { updateStyle } from './style';
 import { getTheme, setTheme } from './theme';
 
@@ -43,7 +43,7 @@ const rawMethods = {
     // Misc
     processDom,
     setFrameId,
-    setBranchId,
+    setProjectId,
     getComputedStyleByDomId,
     updateElementInstance,
     getFirstOnlookElement,

@@ -3,7 +3,7 @@ import type { CoreElementType, DomElement, DynamicType } from '@onlook/models';
 import type { ActionElement, ActionLocation } from '@onlook/models/actions';
 import { getHtmlElement } from '../../../helpers';
 import { getInstanceId, getOid, getOrAssignDomId } from '../../../helpers/ids';
-import { getBranchId } from '../../state';
+import { getProjectId } from '../../state';
 import { getDomElement, getImmediateTextContent } from '../helpers';
 
 export function getActionElement(domId: string): ActionElement | null {
@@ -33,7 +33,7 @@ export function getActionElementFromHtmlElement(el: HTMLElement): ActionElement 
 
     return {
         oid,
-        branchId: getBranchId(),
+        projectId: getProjectId(),
         domId: getOrAssignDomId(el),
         tagName: el.tagName.toLowerCase(),
         children: Array.from(el.children)

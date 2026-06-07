@@ -6,7 +6,7 @@ export const DEFAULT_LOCAL_PREVIEW_URL = 'http://localhost:3000';
 export function createDefaultLocalFrame(projectId: string, url = DEFAULT_LOCAL_PREVIEW_URL): Frame {
     return {
         id: uuidv4(),
-        branchId: projectId,
+        projectId: projectId,
         canvasId: projectId,
         position: {
             x: 150,
@@ -41,7 +41,7 @@ export function frameToConvexInput(frame: Frame, projectId: string) {
 export function frameFromConvex(row: ConvexFrameRow): Frame {
     return {
         id: row.frameId,
-        branchId: row.projectId,
+        projectId: row.projectId,
         canvasId: row.projectId,
         position: row.position,
         dimension: row.dimension,

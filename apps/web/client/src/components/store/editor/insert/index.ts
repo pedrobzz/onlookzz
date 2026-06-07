@@ -171,7 +171,7 @@ export class InsertManager {
             console.error('Frame data not found');
             return;
         }
-        const branchId = frameData.frame.branchId;
+        const projectId = frameData.frame.projectId;
 
         const mode = this.editorEngine.state.insertMode;
         const domId = createDomId();
@@ -193,7 +193,7 @@ export class InsertManager {
         const actionElement: ActionElement = {
             domId,
             oid,
-            branchId,
+            projectId,
             tagName: mode === InsertMode.INSERT_TEXT ? 'p' : 'div',
             attributes: {
                 [EditorAttributes.DATA_ONLOOK_DOM_ID]: domId,
@@ -208,7 +208,7 @@ export class InsertManager {
         const targets: Array<ActionTarget> = [
             {
                 frameId: frameView.id,
-                branchId,
+                projectId,
                 domId,
                 oid: null,
             },
@@ -301,7 +301,7 @@ export class InsertManager {
             targets: [
                 {
                     frameId: frame.frame.id,
-                    branchId: frame.frame.branchId,
+                    projectId: frame.frame.projectId,
                     domId: actionElement.domId,
                     oid: actionElement.oid,
                 },
@@ -328,7 +328,7 @@ export class InsertManager {
             targets: [
                 {
                     frameId: frame.frame.id,
-                    branchId: frame.frame.branchId,
+                    projectId: frame.frame.projectId,
                     domId: actionElement.domId,
                     oid: actionElement.oid,
                 },
@@ -355,7 +355,7 @@ export class InsertManager {
         const imageElement: ActionElement = {
             domId,
             oid,
-            branchId: frame.frame.branchId,
+            projectId: frame.frame.projectId,
             tagName: 'img',
             children: [],
             attributes: {
@@ -374,7 +374,7 @@ export class InsertManager {
 
         const action: InsertElementAction = {
             type: 'insert-element',
-            targets: [{ frameId: frame.frame.id, branchId: frame.frame.branchId, domId, oid }],
+            targets: [{ frameId: frame.frame.id, projectId: frame.frame.projectId, domId, oid }],
             element: imageElement,
             location,
             editText: false,
@@ -441,7 +441,7 @@ export class InsertManager {
                     domId: targetElement.domId,
                     oid: targetElement.oid,
                     frameId: frame.frame.id,
-                    branchId: frame.frame.branchId,
+                    projectId: frame.frame.projectId,
                 },
             ],
         };
@@ -470,7 +470,7 @@ export class InsertManager {
         const element: ActionElement = {
             domId,
             oid,
-            branchId: frame.frame.branchId,
+            projectId: frame.frame.projectId,
             tagName: properties.tagName,
             styles: properties.styles,
             children: [],
@@ -487,7 +487,7 @@ export class InsertManager {
             targets: [
                 {
                     frameId: frame.frame.id,
-                    branchId: frame.frame.branchId,
+                    projectId: frame.frame.projectId,
                     domId,
                     oid: null,
                 },

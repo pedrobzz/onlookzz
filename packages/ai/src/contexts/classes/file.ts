@@ -16,8 +16,8 @@ If relevant, feel free to retrieve their content.`;
 
     static getPrompt(context: FileMessageContext): string {
         const pathDisplay = wrapXml('path', context.path);
-        const branchDisplay = wrapXml('branch', `id: "${context.branchId}"`);
-        let prompt = `${pathDisplay}\n${branchDisplay}\n`;
+        const projectDisplay = wrapXml('project', `id: "${context.projectId}"`);
+        let prompt = `${pathDisplay}\n${projectDisplay}\n`;
         prompt += `${CODE_FENCE.start}${FileContext.getLanguageFromFilePath(context.path)}\n`;
         prompt += context.content;
         prompt += `\n${CODE_FENCE.end}\n`;
@@ -41,7 +41,7 @@ If relevant, feel free to retrieve their content.`;
         for (const file of files) {
             let filePrompt = FileContext.getPrompt(file);
             // Add highlights for this file
-            const highlightContent = FileContext.getHighlightsForFile(file.path, highlights, file.branchId);
+            const highlightContent = FileContext.getHighlightsForFile(file.path, highlights, file.projectId);
             if (highlightContent) {
                 filePrompt += highlightContent;
             }
@@ -65,9 +65,9 @@ If relevant, feel free to retrieve their content.`;
         prompt += `${FileContext.truncatedFilesContentPrefix}\n`;
         let index = 1;
         for (const file of files) {
-            const branchDisplay = FileContext.getBranchContent(file.branchId);
+            const projectDisplay = FileContext.getProjectContent(file.projectId);
             const pathDisplay = wrapXml('path', file.path);
-            let filePrompt = `${pathDisplay}\n${branchDisplay}\n`;
+            let filePrompt = `${pathDisplay}\n${projectDisplay}\n`;
             filePrompt = wrapXml(files.length > 1 ? `file-${index}` : 'file', filePrompt);
             prompt += filePrompt;
             index++;
@@ -76,13 +76,13 @@ If relevant, feel free to retrieve their content.`;
         return prompt;
     }
 
-    private static getBranchContent(id: string): string {
-        return wrapXml('branch', `id: "${id}"`);
+    private static getProjectContent(id: string): string {
+        return wrapXml('project', `id: "${id}"`);
     }
 
-    private static getHighlightsForFile(filePath: string, highlights: HighlightMessageContext[], branchId: string): string {
+    private static getHighlightsForFile(filePath: string, highlights: HighlightMessageContext[], projectId: string): string {
         // Import HighlightContext dynamically to avoid circular imports
-        return HighlightContext.getHighlightsContent(filePath, highlights, branchId);
+        return HighlightContext.getHighlightsContent(filePath, highlights, projectId);
     }
 
     private static getLanguageFromFilePath(filePath: string): string {

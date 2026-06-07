@@ -51,7 +51,7 @@ export async function getStyleRequests({ targets }: UpdateStyleAction): Promise<
             throw new Error('No oid found for style change');
         }
 
-        const request = await getOrCreateCodeDiffRequest(target.oid, target.branchId, oidToCodeChange);
+        const request = await getOrCreateCodeDiffRequest(target.oid, target.projectId, oidToCodeChange);
         addTailwindToRequest(request, target.change.updated);
     }
 
@@ -73,7 +73,7 @@ export async function getInsertRequests({
 
     const request = await getOrCreateCodeDiffRequest(
         insertedEl.location.targetOid,
-        element.branchId,
+        element.projectId,
         oidToCodeChange,
     );
     request.structureChanges.push(insertedEl);
@@ -91,7 +91,7 @@ export async function getRemoveRequests({
         codeBlock,
     };
 
-    const request = await getOrCreateCodeDiffRequest(removedEl.oid, element.branchId, oidToCodeChange);
+    const request = await getOrCreateCodeDiffRequest(removedEl.oid, element.projectId, oidToCodeChange);
     request.structureChanges.push(removedEl);
     return Array.from(oidToCodeChange.values());
 }
@@ -106,7 +106,7 @@ export async function getEditTextRequests({
         if (!target.oid) {
             throw new Error('No oid found for text edit');
         }
-        const request = await getOrCreateCodeDiffRequest(target.oid, target.branchId, oidToCodeChange);
+        const request = await getOrCreateCodeDiffRequest(target.oid, target.projectId, oidToCodeChange);
         request.textContent = newContent;
     }
 
@@ -134,7 +134,7 @@ export async function getMoveRequests({
             location,
         };
 
-        const request = await getOrCreateCodeDiffRequest(location.targetOid, target.branchId, oidToCodeChange);
+        const request = await getOrCreateCodeDiffRequest(location.targetOid, target.projectId, oidToCodeChange);
         request.structureChanges.push(movedEl);
     }
 
@@ -153,7 +153,7 @@ export async function getGroupRequests(action: GroupElementsAction): Promise<Cod
         children: action.children,
     };
 
-    const request = await getOrCreateCodeDiffRequest(groupEl.oid, action.parent.branchId, oidToCodeChange);
+    const request = await getOrCreateCodeDiffRequest(groupEl.oid, action.parent.projectId, oidToCodeChange);
     request.structureChanges.push(groupEl);
 
     return Array.from(oidToCodeChange.values());
@@ -173,7 +173,7 @@ export async function getUngroupRequests(
         children: action.children,
     };
 
-    const request = await getOrCreateCodeDiffRequest(ungroupEl.oid, action.parent.branchId, oidToCodeChange);
+    const request = await getOrCreateCodeDiffRequest(ungroupEl.oid, action.parent.projectId, oidToCodeChange);
     request.structureChanges.push(ungroupEl);
 
     return Array.from(oidToCodeChange.values());
@@ -202,7 +202,7 @@ export async function getRemoveImageRequests(
         if (!target.oid) {
             throw new Error('No oid found for removed image');
         }
-        const request = await getOrCreateCodeDiffRequest(target.oid, target.branchId, oidToCodeChange);
+        const request = await getOrCreateCodeDiffRequest(target.oid, target.projectId, oidToCodeChange);
         request.structureChanges.push(removeImage);
     }
     return Array.from(oidToCodeChange.values());

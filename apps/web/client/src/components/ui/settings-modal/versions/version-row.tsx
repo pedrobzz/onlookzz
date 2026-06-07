@@ -102,7 +102,7 @@ export const VersionRow = observer(
                 const checkpoint = {
                     type: MessageCheckpointType.GIT,
                     oid: commit.oid,
-                    branchId: editorEngine.projectId,
+                    projectId: editorEngine.projectId,
                     createdAt: new Date(),
                 };
 

@@ -14,14 +14,14 @@ interface CollapsibleCodeBlockProps {
     messageId: string;
     applied: boolean;
     isStream?: boolean;
-    branchId?: string;
+    projectId?: string;
 }
 
 const CollapsibleCodeBlockComponent = ({
     path,
     content,
     isStream,
-    branchId,
+    projectId,
 }: CollapsibleCodeBlockProps) => {
     const editorEngine = useEditorEngine();
     const [isOpen, setIsOpen] = useState(false);
@@ -71,7 +71,7 @@ const CollapsibleCodeBlockComponent = ({
                                     )}
                                 >
                                     <span className="truncate flex-1 min-w-0">{getTruncatedFileName(path)}</span>
-                                    {branchId && (
+                                    {projectId && (
                                         <span className="text-foreground-tertiary group-hover:text-foreground-secondary text-mini ml-0.5 flex-shrink-0 truncate max-w-24">
                                             {' • '}{editorEngine.projectName}
                                         </span>

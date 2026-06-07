@@ -75,7 +75,7 @@ export class ChatContext {
         this._context = [...Array.from(fileMap.values()), ...Array.from(highlightMap.values()), ...otherContexts];
     }
 
-    addHighlightContext(path: string, content: string, start: number, end: number, branchId: string, displayName: string) {
+    addHighlightContext(path: string, content: string, start: number, end: number, projectId: string, displayName: string) {
         const highlightContext: HighlightMessageContext = {
             type: MessageContextType.HIGHLIGHT,
             path,
@@ -83,7 +83,7 @@ export class ChatContext {
             displayName,
             start,
             end,
-            branchId,
+            projectId,
         };
         this.addContexts([highlightContext]);
     }
@@ -125,14 +125,14 @@ export class ChatContext {
         // Images are not refreshed as they are not editable.
         return (await Promise.all(
             context.map(async (c) => {
-                if (c.type === MessageContextType.FILE && 'branchId' in c && c.branchId) {
+                if (c.type === MessageContextType.FILE && 'projectId' in c && c.projectId) {
                     const fileContent = await this.editorEngine.fileSystem.readFile(c.path);
                     if (fileContent instanceof Uint8Array) {
                         console.error('File is binary', c.path);
                         return c;
                     }
                     return { ...c, content: fileContent } satisfies FileMessageContext;
-                } else if (c.type === MessageContextType.HIGHLIGHT && c.oid && 'branchId' in c && c.branchId) {
+                } else if (c.type === MessageContextType.HIGHLIGHT && c.oid && 'projectId' in c && c.projectId) {
                     const metadata = await this.editorEngine.fileSystem.getJsxElementMetadata(c.oid);
                     if (!metadata?.code) {
                         console.error('No code block found for node', c.path);
@@ -166,7 +166,7 @@ export class ChatContext {
                 displayName: filePath,
                 path: filePath,
                 content,
-                branchId: projectId,
+                projectId: projectId,
             });
         }
         return fileContext;
@@ -218,7 +218,7 @@ export class ChatContext {
             start: metadata.startTag.start.line,
             end: metadata.endTag?.end.line || metadata.startTag.end.line,
             oid: id,
-            branchId: this.editorEngine.projectId,
+            projectId: this.editorEngine.projectId,
         };
 
         return highlight;
@@ -268,7 +268,7 @@ export class ChatContext {
                 .map((e) => `Source: ${e.sourceId}\nContent: ${e.content}\n`)
                 .join('\n'),
             displayName: `Errors - ${this.editorEngine.projectName}`,
-            branchId: this.editorEngine.projectId,
+            projectId: this.editorEngine.projectId,
         }];
     }
 
@@ -308,7 +308,7 @@ export class ChatContext {
                         path: pagePath,
                         content: fileContent,
                         displayName: pagePath.split('/').pop() || 'page.tsx',
-                        branchId: this.editorEngine.projectId,
+                        projectId: this.editorEngine.projectId,
                     };
                     return defaultPageContext;
                 }
@@ -331,7 +331,7 @@ export class ChatContext {
                 path: styleGuide.configPath,
                 content: styleGuide.configContent,
                 displayName: styleGuide.configPath.split('/').pop() || 'tailwind.config.ts',
-                branchId: this.editorEngine.projectId,
+                projectId: this.editorEngine.projectId,
             };
 
             const cssContext: FileMessageContext = {
@@ -339,7 +339,7 @@ export class ChatContext {
                 path: styleGuide.cssPath,
                 content: styleGuide.cssContent,
                 displayName: styleGuide.cssPath.split('/').pop() || 'globals.css',
-                branchId: this.editorEngine.projectId,
+                projectId: this.editorEngine.projectId,
             };
 
             return [tailwindConfigContext, cssContext];

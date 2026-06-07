@@ -11,7 +11,7 @@ import { useMutation } from 'convex/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import {
-    createCheckpointsForAllBranches,
+    createProjectCheckpoint,
     getUserChatMessageFromString
 } from './utils';
 
@@ -241,10 +241,9 @@ export function useChat({ conversationId, projectId, initialMessages }: UseChatP
                     return;
                 }
 
-                // Create checkpoints for all branches
-                const checkpoints = await createCheckpointsForAllBranches(editorEngine, content);
+                const checkpoint = await createProjectCheckpoint(editorEngine, content);
 
-                if (checkpoints.length === 0) {
+                if (!checkpoint) {
                     return;
                 }
 
@@ -258,17 +257,13 @@ export function useChat({ conversationId, projectId, initialMessages }: UseChatP
                     ...lastUserMessage.metadata,
                     createdAt: lastUserMessage.metadata?.createdAt ?? new Date(),
                     conversationId,
-                    checkpoints: [...oldCheckpoints, ...checkpoints],
+                    checkpoints: [...oldCheckpoints, checkpoint],
                     context: lastUserMessage.metadata?.context ?? [],
                 };
 
-                // Save checkpoints to database (filter out legacy checkpoints without branchId)
-                const checkpointsWithBranchId = [...oldCheckpoints, ...checkpoints].filter(
-                    (cp): cp is GitMessageCheckpoint & { branchId: string } => !!cp.branchId
-                );
                 void updateMessageCheckpoints({
                     messageId: lastUserMessage.id,
-                    checkpoints: checkpointsWithBranchId,
+                    checkpoints: [...oldCheckpoints, checkpoint],
                 });
 
                 setMessages(

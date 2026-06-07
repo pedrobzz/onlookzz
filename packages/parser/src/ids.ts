@@ -42,22 +42,22 @@ function removeAllOidAttributes(
 }
 
 /**
- * Checks if an OID should be replaced due to branch or local conflicts
+ * Checks if an OID should be replaced due to project or local conflicts
  */
 function shouldReplaceOid(
     oidValue: string,
     globalOids: Set<string>,
     localOids: Set<string>,
-    branchOidMap: Map<string, string>,
-    currentBranchId?: string,
+    projectOidMap: Map<string, string>,
+    currentProjectId?: string,
 ): boolean {
-    const oidOwnerBranch = branchOidMap.get(oidValue);
+    const oidOwnerProject = projectOidMap.get(oidValue);
 
     // Replace OID if:
-    // 1. It exists globally AND belongs to a different branch, OR
+    // 1. It exists globally AND belongs to a different project, OR
     // 2. It's already used elsewhere in this same AST
     return (
-        (globalOids.has(oidValue) && oidOwnerBranch && oidOwnerBranch !== currentBranchId) ||
+        (globalOids.has(oidValue) && oidOwnerProject && oidOwnerProject !== currentProjectId) ||
         localOids.has(oidValue)
     );
 }
@@ -92,10 +92,10 @@ function handleSingleValidOid(
     oidIndex: number,
     globalOids: Set<string>,
     localOids: Set<string>,
-    branchOidMap: Map<string, string>,
-    currentBranchId?: string,
+    projectOidMap: Map<string, string>,
+    currentProjectId?: string,
 ): { oidValue: string; wasReplaced: boolean } {
-    if (shouldReplaceOid(oidValue, globalOids, localOids, branchOidMap, currentBranchId)) {
+    if (shouldReplaceOid(oidValue, globalOids, localOids, projectOidMap, currentProjectId)) {
         // Generate new unique OID and replace the existing one
         const newOid = generateUniqueOid(globalOids, localOids);
         const attr = attributes[oidIndex] as T.JSXAttribute;
@@ -127,8 +127,8 @@ function handleMissingOid(
 export function addOidsToAst(
     ast: T.File,
     globalOids = new Set<string>(),
-    branchOidMap = new Map<string, string>(),
-    currentBranchId?: string,
+    projectOidMap = new Map<string, string>(),
+    currentProjectId?: string,
 ): { ast: T.File; modified: boolean } {
     let modified = false;
     // Track OIDs used within this AST to prevent duplicates in the same file
@@ -160,8 +160,8 @@ export function addOidsToAst(
                             oidIndex,
                             globalOids,
                             localOids,
-                            branchOidMap,
-                            currentBranchId,
+                            projectOidMap,
+                            currentProjectId,
                         );
                         if (result.wasReplaced) {
                             modified = true;

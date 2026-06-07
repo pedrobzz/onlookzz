@@ -1,5 +1,4 @@
 import {
-    type BranchTabValue,
     type BrandTabValue,
     ChatType,
     EditorMode,
@@ -21,8 +20,6 @@ export class StateManager {
     insertMode: InsertMode | null = null;
     leftPanelTab: LeftPanelTabValue | null = null;
     brandTab: BrandTabValue | null = null;
-    branchTab: BranchTabValue | null = null;
-    manageBranchId: string | null = null;
 
     chatMode: ChatType = ChatType.EDIT;
 
@@ -50,8 +47,6 @@ export class StateManager {
     clear() {
         this.hotkeysOpen = false;
         this.publishOpen = false;
-        this.branchTab = null;
-        this.manageBranchId = null;
         this.resetCanvasScrollingDebounced.cancel();
     }
 }

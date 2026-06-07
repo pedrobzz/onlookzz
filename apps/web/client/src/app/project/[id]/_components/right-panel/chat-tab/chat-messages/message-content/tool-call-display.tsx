@@ -90,7 +90,7 @@ const ToolCallDisplayComponent = ({
                 messageId={messageId}
                 applied={applied}
                 isStream={isStream}
-                branchId={projectId}
+                projectId={projectId}
             />
         );
     }
@@ -115,7 +115,7 @@ const ToolCallDisplayComponent = ({
                 messageId={messageId}
                 applied={applied}
                 isStream={isStream}
-                branchId={projectId}
+                projectId={projectId}
             />
         );
     }
@@ -140,7 +140,7 @@ const ToolCallDisplayComponent = ({
                 messageId={messageId}
                 applied={applied}
                 isStream={isStream}
-                branchId={projectId}
+                projectId={projectId}
             />
         );
     }
@@ -165,7 +165,7 @@ const ToolCallDisplayComponent = ({
                 messageId={messageId}
                 applied={applied}
                 isStream={isStream}
-                branchId={projectId}
+                projectId={projectId}
             />
         );
     }

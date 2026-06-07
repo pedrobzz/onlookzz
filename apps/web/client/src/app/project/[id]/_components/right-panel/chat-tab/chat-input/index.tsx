@@ -218,7 +218,7 @@ export const ChatInput = observer(
                             type: MessageContextType.IMAGE,
                             source: 'local',
                             path: data.originPath,
-                            branchId: editorEngine.projectId,
+                            projectId: editorEngine.projectId,
                             content: base64Content,
                             displayName: data.fileName,
                             mimeType: data.mimeType,

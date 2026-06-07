@@ -6,7 +6,7 @@ import { calculateNonOverlappingPosition } from '../src/frame';
 function createFrame(id: string, x: number, y: number, width: number, height: number): Frame {
     return {
         id,
-        branchId: 'test-branch',
+        projectId: 'test-project',
         canvasId: 'test-canvas',
         position: { x, y },
         dimension: { width, height },

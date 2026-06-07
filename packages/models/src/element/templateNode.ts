@@ -2,7 +2,7 @@ import { type CoreElementType, type DynamicType } from './layers';
 
 export interface TemplateNode {
     path: string;
-    branchId: string;
+    projectId: string;
     startTag: TemplateTag;
     endTag: TemplateTag | null;
     component: string | null;

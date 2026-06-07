@@ -4,7 +4,7 @@ import {
     type MessageContext
 } from '@onlook/models';
 import type { FileUIPart } from 'ai';
-import { AgentRuleContext, BranchContext, ErrorContext, FileContext, ImageContext } from '../contexts/classes';
+import { AgentRuleContext, ErrorContext, FileContext, ImageContext } from '../contexts/classes';
 import { ASK_MODE_SYSTEM_PROMPT, CREATE_NEW_PAGE_SYSTEM_PROMPT, SHELL_PROMPT, SUGGESTION_SYSTEM_PROMPT, SUMMARY_PROMPTS, SYSTEM_PROMPT } from './constants';
 import { wrapXml } from './helpers';
 
@@ -67,7 +67,6 @@ export function getHydratedUserMessage(
     const allImages = context.filter((c) => c.type === MessageContextType.IMAGE).map((c) => c);
     const externalImages = allImages.filter((img) => img.source === 'external');
     const localImages = allImages.filter((img) => img.source === 'local');
-    const branches = context.filter((c) => c.type === MessageContextType.BRANCH).map((c) => c);
 
     // If there are 50 user messages in the contexts, we can trim all of them except
     // the last one. The logic could be adjusted to trim more or less messages.
@@ -97,14 +96,9 @@ export function getHydratedUserMessage(
         prompt += agentRulePrompt;
     }
 
-    if (branches.length > 0) {
-        const branchPrompt = BranchContext.getBranchesContent(branches);
-        prompt += branchPrompt;
-    }
-
     if (localImages.length > 0) {
         const localImageList = localImages
-            .map((img) => `- ${img.displayName}: ${img.path} (branch: ${img.branchId})`)
+            .map((img) => `- ${img.displayName}: ${img.path} (project: ${img.projectId})`)
             .join('\n');
         prompt += wrapXml('local-images',
             'These images already exist in the project at the specified paths. Reference them directly in your code without uploading:\n' + localImageList
@@ -142,10 +136,6 @@ export function getHydratedUserMessage(
 
 export function getLanguageFromFilePath(filePath: string): string {
     return filePath.split('.').pop() ?? '';
-}
-
-export function getBranchContent(id: string) {
-    return wrapXml('branch', `id: "${id}"`);
 }
 
 export function getSummaryPrompt() {

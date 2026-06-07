@@ -30,8 +30,8 @@ export class CheckErrorsTool extends ClientTool {
             sourceId: error.sourceId,
             type: error.type,
             content: error.content,
-            branchId: error.branchId,
-            branchName: error.branchName,
+            projectId: error.projectId,
+            projectName: error.projectName,
         }));
 
         return {

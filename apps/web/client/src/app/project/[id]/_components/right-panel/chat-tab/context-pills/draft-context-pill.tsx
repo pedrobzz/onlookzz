@@ -1,4 +1,4 @@
-import { type MessageContext, MessageContextType } from '@onlook/models/chat';
+import { type MessageContext } from '@onlook/models/chat';
 import { Icons } from '@onlook/ui/icons';
 import { cn } from '@onlook/ui/utils';
 import { motion } from 'motion/react';
@@ -12,8 +12,6 @@ export const DraftContextPill = React.forwardRef<
         onRemove: () => void;
     }
 >(({ context, onRemove }, ref) => {
-    const isBranch = context.type === MessageContextType.BRANCH;
-
     return (
         <motion.span
             layout="position"
@@ -29,7 +27,7 @@ export const DraftContextPill = React.forwardRef<
             }}
             className={cn(
                 'group relative flex flex-row items-center gap-1 justify-center border border-foreground-tertiary/20 rounded-md h-7 px-2',
-                isBranch ? 'bg-teal-900 border-teal-800 text-teal-200' : 'bg-background-tertiary/50 text-foreground-secondary'
+                'bg-background-tertiary/50 text-foreground-secondary'
             )}
             ref={ref}
         >

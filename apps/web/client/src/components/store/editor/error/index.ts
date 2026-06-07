@@ -37,8 +37,8 @@ export class ErrorManager {
             sourceId: 'Dev Server Error (CLI)',
             type: 'terminal',
             content: message,
-            branchId: this.projectId,
-            branchName: 'Project',
+            projectId: this.projectId,
+            projectName: 'Project',
         };
         const existingErrors = this._errors || [];
         if (!existingErrors.some((e) => compareErrors(e, error))) {
@@ -53,8 +53,8 @@ export class ErrorManager {
             sourceId,
             type: 'apply-code',
             content,
-            branchId: this.projectId,
-            branchName: 'Project',
+            projectId: this.projectId,
+            projectName: 'Project',
         };
 
         const existingErrors = this._errors || [];

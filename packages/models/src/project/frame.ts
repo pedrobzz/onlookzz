@@ -4,7 +4,7 @@ import type { RectDimension, RectPosition } from './rect';
 export interface Frame {
     // IDs
     id: string;
-    branchId: string;
+    projectId: string;
     canvasId: string;
 
     // display data

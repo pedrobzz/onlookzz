@@ -489,7 +489,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
                 displayName: fileName + ' (' + startLine + ':' + endLine + ')',
                 start: startLine,
                 end: endLine,
-                branchId: projectContextId,
+                projectId: projectContextId,
             }]);
 
             toast.success('Selection added to chat context');
@@ -527,7 +527,7 @@ export const CodeTab = memo(forwardRef<CodeTabRef, CodeTabProps>(({ projectId },
                 type: MessageContextType.FILE,
                 path: filePath,
                 displayName: fileName,
-                branchId: projectContextId,
+                projectId: projectContextId,
                 content: contentString,
             }]);
 

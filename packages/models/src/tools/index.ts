@@ -16,8 +16,8 @@ export interface CheckErrorsResult {
         sourceId: string;
         type: string;
         content: string;
-        branchId: string;
-        branchName: string;
+        projectId: string;
+        projectName: string;
     }[];
     count: number;
 }

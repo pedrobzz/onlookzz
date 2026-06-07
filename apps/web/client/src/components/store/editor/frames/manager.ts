@@ -58,10 +58,6 @@ export class FramesManager {
         return Array.from(this._frameIdToData.values());
     }
 
-    getByBranchId(branchId: string): FrameData[] {
-        return Array.from(this._frameIdToData.values()).filter((w) => w.frame.branchId === branchId);
-    }
-
     get(id: string): FrameData | null {
         return this._frameIdToData.get(id) ?? null;
     }
@@ -282,22 +278,11 @@ export class FramesManager {
     }
 
     canDelete() {
-        const selectedFrames = this.selected;
-
-        if (selectedFrames.length > 0) {
-            // Check if any selected frame is the last frame in its branch
-            for (const selectedFrame of selectedFrames) {
-                const branchId = selectedFrame.frame.branchId;
-                const framesInBranch = this.getAll().filter(frameData => frameData.frame.branchId === branchId);
-                if (framesInBranch.length <= 1) {
-                    return false; // Cannot delete if this is the last frame in the branch
-                }
-            }
-            return true;
+        if (this.selected.length === 0) {
+            return this.getAll().length > 1;
         }
 
-        // Fallback to checking total frames if none are selected
-        return this.getAll().length > 1;
+        return this.getAll().length - this.selected.length >= 1;
     }
 
     canDuplicate() {

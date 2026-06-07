@@ -319,7 +319,7 @@ export class MoveManager {
             targets: [
                 {
                     frameId: frameId,
-                    branchId: child.branchId,
+                    projectId: child.projectId,
                     domId: child.domId,
                     oid: child.instanceId ?? child.oid,
                 },

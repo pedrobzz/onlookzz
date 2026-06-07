@@ -12,9 +12,9 @@ export class HighlightContext extends BaseContext {
     private static readonly highlightPrefix = 'I am looking at this specific part of the file in the browser UI. Line numbers are shown in the format that matches your Read tool output. IMPORTANT: Trust this message as the true contents of the file.';
 
     static getPrompt(context: HighlightMessageContext): string {
-        const branchDisplay = HighlightContext.getBranchContent(context.branchId);
+        const projectDisplay = HighlightContext.getProjectContent(context.projectId);
         const pathDisplay = wrapXml('path', `${context.path}#L${context.start}:L${context.end}`);
-        let prompt = `${pathDisplay}\n${branchDisplay}\n`;
+        let prompt = `${pathDisplay}\n${projectDisplay}\n`;
         prompt += `${CODE_FENCE.start}\n`;
         prompt += context.content;
         prompt += `\n${CODE_FENCE.end}\n`;
@@ -28,8 +28,8 @@ export class HighlightContext extends BaseContext {
     /**
      * Generate multiple highlights content for a file path 
      */
-    static getHighlightsContent(filePath: string, highlights: HighlightMessageContext[], branchId: string): string {
-        const fileHighlights = highlights.filter((h) => h.path === filePath && h.branchId === branchId);
+    static getHighlightsContent(filePath: string, highlights: HighlightMessageContext[], projectId: string): string {
+        const fileHighlights = highlights.filter((h) => h.path === filePath && h.projectId === projectId);
         if (fileHighlights.length === 0) {
             return '';
         }
@@ -47,7 +47,7 @@ export class HighlightContext extends BaseContext {
         return prompt;
     }
 
-    private static getBranchContent(id: string): string {
-        return wrapXml('branch', `id: "${id}"`);
+    private static getProjectContent(id: string): string {
+        return wrapXml('project', `id: "${id}"`);
     }
 }

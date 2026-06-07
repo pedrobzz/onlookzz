@@ -99,9 +99,9 @@ export const ErrorSection = observer(({ isStreaming, onSendMessage }: ErrorSecti
                         >
                             <div className="px-2.5 py-2 max-h-60 overflow-auto">
                                 {allErrors.map((error: ParsedError) => (
-                                    <div key={`${error.branchId}-${error.content}`} className="mb-3 last:mb-0 font-mono">
+                                    <div key={`${error.projectId}-${error.content}`} className="mb-3 last:mb-0 font-mono">
                                         <div className="flex items-center gap-2 text-sm text-amber-800/80 dark:text-amber-200/80 mb-1">
-                                            <span className="truncate">{error.sourceId} • {error.branchName}</span>
+                                            <span className="truncate">{error.sourceId} • {error.projectName}</span>
                                         </div>
                                         <pre className="text-micro text-amber-800/60 dark:text-amber-200/60">
                                             {error.content}

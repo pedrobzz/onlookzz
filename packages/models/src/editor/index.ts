@@ -33,17 +33,12 @@ export enum LeftPanelTabValue {
     IMAGES = 'images',
     WINDOWS = 'windows',
     BRAND = 'brand',
-    BRANCHES = 'branches',
     APPS = 'apps',
 }
 
 export enum BrandTabValue {
     COLORS = 'colors',
     FONTS = 'fonts',
-}
-
-export enum BranchTabValue {
-    MANAGE = 'manage',
 }
 
 export enum MouseAction {

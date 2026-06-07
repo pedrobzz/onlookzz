@@ -33,26 +33,25 @@ export const getUserChatMessageFromString = (
     }
 }
 
-export async function createCheckpointsForAllBranches(
+export async function createProjectCheckpoint(
     editorEngine: EditorEngine,
     commitMessage: string,
-): Promise<GitMessageCheckpoint[]> {
-    const checkpoints: GitMessageCheckpoint[] = [];
-
+): Promise<GitMessageCheckpoint | null> {
     const result = await editorEngine.activeSandbox.gitManager.createCommit(commitMessage);
 
-    if (result.success) {
-        const commits = editorEngine.activeSandbox.gitManager.commits;
-        const latestCommit = commits?.[0];
-        if (latestCommit) {
-            checkpoints.push({
-                type: MessageCheckpointType.GIT,
-                oid: latestCommit.oid,
-                branchId: editorEngine.projectId,
-                createdAt: new Date(),
-            });
-        }
+    if (!result.success) {
+        return null;
     }
 
-    return checkpoints;
+    const latestCommit = editorEngine.activeSandbox.gitManager.commits?.[0];
+    if (!latestCommit) {
+        return null;
+    }
+
+    return {
+        type: MessageCheckpointType.GIT,
+        oid: latestCommit.oid,
+        projectId: editorEngine.projectId,
+        createdAt: new Date(),
+    };
 }

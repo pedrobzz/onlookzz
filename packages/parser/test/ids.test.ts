@@ -52,41 +52,41 @@ describe('addOidsToAst', () => {
         });
     }
 
-    describe('branch-aware OID handling', () => {
-        test('should preserve existing OIDs from same branch', async () => {
+    describe('project-aware OID handling', () => {
+        test('should preserve existing OIDs from same project', async () => {
             const inputContent = `<div data-oid="existing-oid">Content</div>`;
             const ast = getAstFromContent(inputContent);
             if (!ast) throw new Error('Failed to parse input code');
 
             const globalOids = new Set(['existing-oid']);
-            const branchOidMap = new Map([['existing-oid', 'branch-1']]);
+            const projectOidMap = new Map([['existing-oid', 'project-1']]);
 
             const { ast: astWithIds, modified } = addOidsToAst(
                 ast,
                 globalOids,
-                branchOidMap,
-                'branch-1',
+                projectOidMap,
+                'project-1',
             );
 
             const result = await getContentFromAst(astWithIds, inputContent);
 
-            expect(modified).toBe(false); // Should not modify same-branch OIDs
+            expect(modified).toBe(false); // Should not modify same-project OIDs
             expect(result).toContain('data-oid="existing-oid"'); // Should preserve original OID
         });
 
-        test('should replace OIDs that conflict with different branches', async () => {
+        test('should replace OIDs that conflict with different projects', async () => {
             const inputContent = `<div data-oid="conflicting-oid">Content</div>`;
             const ast = getAstFromContent(inputContent);
             if (!ast) throw new Error('Failed to parse input code');
 
             const globalOids = new Set(['conflicting-oid']);
-            const branchOidMap = new Map([['conflicting-oid', 'other-branch']]);
+            const projectOidMap = new Map([['conflicting-oid', 'other-project']]);
 
             const { ast: astWithIds, modified } = addOidsToAst(
                 ast,
                 globalOids,
-                branchOidMap,
-                'current-branch',
+                projectOidMap,
+                'current-project',
             );
 
             const result = await getContentFromAst(astWithIds, inputContent);
@@ -102,13 +102,13 @@ describe('addOidsToAst', () => {
             if (!ast) throw new Error('Failed to parse input code');
 
             const globalOids = new Set(['existing-oid']);
-            const branchOidMap = new Map([['existing-oid', 'other-branch']]);
+            const projectOidMap = new Map([['existing-oid', 'other-project']]);
 
             const { ast: astWithIds, modified } = addOidsToAst(
                 ast,
                 globalOids,
-                branchOidMap,
-                'current-branch',
+                projectOidMap,
+                'current-project',
             );
 
             const result = await getContentFromAst(astWithIds, inputContent);
@@ -130,13 +130,13 @@ describe('addOidsToAst', () => {
             if (!ast) throw new Error('Failed to parse input code');
 
             const globalOids = new Set<string>();
-            const branchOidMap = new Map<string, string>();
+            const projectOidMap = new Map<string, string>();
 
             const { ast: astWithIds, modified } = addOidsToAst(
                 ast,
                 globalOids,
-                branchOidMap,
-                'current-branch',
+                projectOidMap,
+                'current-project',
             );
 
             const result = await getContentFromAst(astWithIds, inputContent);
@@ -177,13 +177,13 @@ describe('addOidsToAst', () => {
             if (!ast) throw new Error('Failed to parse input code');
 
             const globalOids = new Set(['existing-1', 'existing-2']);
-            const branchOidMap = new Map();
+            const projectOidMap = new Map();
 
             const { ast: astWithIds, modified } = addOidsToAst(
                 ast,
                 globalOids,
-                branchOidMap,
-                'current-branch',
+                projectOidMap,
+                'current-project',
             );
 
             const result = await getContentFromAst(astWithIds, inputContent);

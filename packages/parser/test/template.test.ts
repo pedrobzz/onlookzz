@@ -26,7 +26,7 @@ describe('Template Tests', () => {
             const mapping = createTemplateNodeMap({
                 ast,
                 filename: 'test.tsx',
-                branchId: 'test-branch',
+                projectId: 'test-project',
             });
 
             expect(mapping?.get('test-id')).toBeDefined();
@@ -50,7 +50,7 @@ describe('Template Tests', () => {
             const mapping = createTemplateNodeMap({
                 ast,
                 filename: 'test.tsx',
-                branchId: 'test-branch',
+                projectId: 'test-project',
             });
 
             expect(mapping?.get('child-id')?.component).toBe('Child');
@@ -76,7 +76,7 @@ describe('Template Tests', () => {
             const mapping = createTemplateNodeMap({
                 ast,
                 filename: 'test.tsx',
-                branchId: 'test-branch',
+                projectId: 'test-project',
             });
 
             expect(mapping?.get('list-item')?.dynamicType).toBe(DynamicType.ARRAY);
@@ -99,7 +99,7 @@ describe('Template Tests', () => {
             const mapping = createTemplateNodeMap({
                 ast,
                 filename: 'test.tsx',
-                branchId: 'test-branch',
+                projectId: 'test-project',
             });
 
             expect(mapping?.get('cond-id')?.dynamicType).toBe(DynamicType.CONDITIONAL);

@@ -2,7 +2,7 @@ import { type CodeAction } from '../actions/code';
 
 export interface CodeDiffRequest {
     oid: string;
-    branchId: string;
+    projectId: string;
     attributes: Record<string, any>;
     textContent: string | null;
     overrideClasses: boolean | null;
