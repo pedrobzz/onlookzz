@@ -178,10 +178,6 @@ export class FramesManager {
 
             this.editorEngine.pages.setActivePath(frameId, path);
 
-            this.editorEngine.posthog.capture('page_navigate', {
-                path,
-            });
-
             // Add to navigation history
             if (addToHistory) {
                 this._navigation.addToHistory(frameId, path);

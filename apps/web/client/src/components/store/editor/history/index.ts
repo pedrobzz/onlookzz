@@ -1,5 +1,4 @@
 import type { Action } from '@onlook/models/actions';
-import { jsonClone } from '@onlook/utility';
 import { makeAutoObservable } from 'mobx';
 import type { EditorEngine } from '../engine';
 import { transformRedoAction, undoAction, updateTransactionActions } from './helpers';
@@ -81,27 +80,6 @@ export class HistoryManager {
 
         this.undoStack.push(action);
         await this.editorEngine.code.write(action);
-
-        switch (action.type) {
-            case 'update-style':
-                this.editorEngine.posthog.capture('style_action', {
-                    style: jsonClone(
-                        action.targets.length > 0 ? action.targets[0]?.change.updated : {},
-                    ),
-                });
-                break;
-            case 'insert-element':
-                this.editorEngine.posthog.capture('insert_action');
-                break;
-            case 'move-element':
-                this.editorEngine.posthog.capture('move_action');
-                break;
-            case 'remove-element':
-                this.editorEngine.posthog.capture('remove_action');
-                break;
-            case 'edit-text':
-                this.editorEngine.posthog.capture('edit_text_action');
-        }
     };
 
     undo = (): Action | null => {

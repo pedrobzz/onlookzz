@@ -1,7 +1,6 @@
 'use client';
 
 import type { Project } from '@onlook/models';
-import { usePostHog } from 'posthog-js/react';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { EditorEngine } from './engine';
 
@@ -20,12 +19,11 @@ export const EditorEngineProvider = ({
     children: React.ReactNode,
     project: Project,
 }) => {
-    const posthog = usePostHog();
     const currentProjectId = useRef(project.id);
     const engineRef = useRef<EditorEngine | null>(null);
 
     const [editorEngine, setEditorEngine] = useState(() => {
-        const engine = new EditorEngine(project.id, project.name, posthog);
+        const engine = new EditorEngine(project.id, project.name);
         void engine.initProject();
         engine.init();
         engineRef.current = engine;
@@ -42,7 +40,7 @@ export const EditorEngineProvider = ({
                 }
 
                 // Create new engine for new project
-                const newEngine = new EditorEngine(project.id, project.name, posthog);
+                const newEngine = new EditorEngine(project.id, project.name);
                 await newEngine.initProject();
                 await newEngine.init();
 

@@ -150,7 +150,6 @@ export class PagesManager {
         try {
             await createPageInSandbox(this.editorEngine.activeSandbox, normalizedPath);
             await this.scanPages();
-            this.editorEngine.posthog.capture('page_create');
         } catch (error) {
             console.error('Failed to create page:', error);
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -171,7 +170,6 @@ export class PagesManager {
         try {
             await renamePageInSandbox(this.editorEngine.activeSandbox, oldPath, newName);
             await this.scanPages();
-            this.editorEngine.posthog.capture('page_rename');
         } catch (error) {
             console.error('Failed to rename page:', error);
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -187,7 +185,6 @@ export class PagesManager {
                 normalizeRoute(targetPath),
             );
             await this.scanPages();
-            this.editorEngine.posthog.capture('page_duplicate');
         } catch (error) {
             console.error('Failed to duplicate page:', error);
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -204,7 +201,6 @@ export class PagesManager {
         try {
             await deletePageInSandbox(this.editorEngine.activeSandbox, normalizedPath, isDir);
             await this.scanPages();
-            this.editorEngine.posthog.capture('page_delete');
         } catch (error) {
             console.error('Failed to delete page:', error);
             const errorMessage = error instanceof Error ? error.message : String(error);

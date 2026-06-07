@@ -1,7 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 
 import { CodeFileSystem } from '@onlook/file-system';
-import type { PostHog } from 'posthog-js/react';
 import { ActionManager } from './action';
 import { ApiManager } from './api';
 import { AstManager } from './ast';
@@ -32,7 +31,6 @@ import { HistoryManager } from './history';
 export class EditorEngine {
     readonly projectId: string;
     readonly projectName: string;
-    readonly posthog: PostHog;
     readonly fileSystem: CodeFileSystem;
     readonly error: ErrorManager;
     readonly history: HistoryManager;
@@ -62,10 +60,9 @@ export class EditorEngine {
     readonly api: ApiManager = new ApiManager(this);
     readonly ide: IdeManager = new IdeManager(this);
 
-    constructor(projectId: string, projectName: string, posthog: PostHog) {
+    constructor(projectId: string, projectName: string) {
         this.projectId = projectId;
         this.projectName = projectName;
-        this.posthog = posthog;
         this.fileSystem = new CodeFileSystem(projectId);
         this.error = new ErrorManager(projectId);
         this.history = new HistoryManager(this);

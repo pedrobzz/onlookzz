@@ -65,7 +65,6 @@ export const Versions = observer(() => {
             }
 
             toast.success('Backup created successfully!');
-            editorEngine.posthog.capture('versions_create_commit_success');
 
             const latestCommit = gitManager.commits?.[0];
             if (!latestCommit) {

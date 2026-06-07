@@ -33,7 +33,6 @@ export class ActionManager {
             return;
         }
         await this.editorEngine.code.write(action);
-        this.editorEngine.posthog.capture('undo');
     }
 
     async redo() {
@@ -42,7 +41,6 @@ export class ActionManager {
             return;
         }
         await this.editorEngine.code.write(action);
-        this.editorEngine.posthog.capture('redo');
     }
 
     private async dispatch(action: Action) {

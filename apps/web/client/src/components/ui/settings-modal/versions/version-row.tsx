@@ -72,11 +72,6 @@ export const VersionRow = observer(
 
             if (!result.success) {
                 toast.error('Failed to rename backup');
-                editorEngine.posthog.capture('versions_rename_commit_failed', {
-                    commit: commit.oid,
-                    newName: name,
-                    error: result.error,
-                });
                 return;
             }
 
@@ -84,10 +79,6 @@ export const VersionRow = observer(
                 description: `Renamed to: "${name}"`,
             });
 
-            editorEngine.posthog.capture('versions_rename_commit_success', {
-                commit: commit.oid,
-                newName: name,
-            });
         };
 
         const startRenaming = () => {
@@ -108,10 +99,6 @@ export const VersionRow = observer(
             try {
                 setIsCheckingOut(true);
 
-                editorEngine.posthog.capture('versions_checkout_commit', {
-                    commit: commit.displayName ?? commit.message,
-                });
-
                 const checkpoint = {
                     type: MessageCheckpointType.GIT,
                     oid: commit.oid,
@@ -124,17 +111,9 @@ export const VersionRow = observer(
                 setIsCheckingOut(false);
 
                 if (!result.success) {
-                    editorEngine.posthog.capture('versions_checkout_commit_failed', {
-                        commit: commit.displayName || commit.message,
-                        error: result.error,
-                    });
                     setIsCheckoutSuccess(false);
                     return;
                 }
-
-                editorEngine.posthog.capture('versions_checkout_commit_success', {
-                    commit: commit.displayName || commit.message,
-                });
 
                 setIsCheckoutSuccess(true);
                 setTimeout(() => {

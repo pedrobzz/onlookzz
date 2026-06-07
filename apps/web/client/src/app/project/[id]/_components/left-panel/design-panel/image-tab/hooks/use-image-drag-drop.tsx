@@ -1,11 +1,9 @@
 import { useEditorEngine } from '@/components/store/editor';
 import { EditorMode, InsertMode, type ImageContentData } from '@onlook/models';
-import { usePostHog } from 'posthog-js/react';
 import { useCallback, useState } from 'react';
 
 export const useImageDragDrop = (onUpload?: (files: FileList) => Promise<void>) => {
     const editorEngine = useEditorEngine();
-    const posthog = usePostHog();
     const [isDragging, setIsDragging] = useState(false);
 
 
@@ -63,7 +61,6 @@ export const useImageDragDrop = (onUpload?: (files: FileList) => Promise<void>) 
                 }
                 frame.view.style.pointerEvents = 'none';
             }
-            posthog.capture('image_drag_start');
         },
         [],
     );

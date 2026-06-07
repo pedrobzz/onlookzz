@@ -19,7 +19,6 @@ export const NoVersions = observer(() => {
             }
 
             toast.success('Backup created successfully!');
-            editorEngine.posthog.capture('versions_create_first_commit');
         } catch (error) {
             toast.error('Failed to create backup', {
                 description: error instanceof Error ? error.message : 'Unknown error',

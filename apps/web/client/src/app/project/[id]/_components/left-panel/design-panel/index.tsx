@@ -6,7 +6,6 @@ import { cn } from '@onlook/ui/utils';
 import { observer } from 'mobx-react-lite';
 import { useTranslations } from 'next-intl';
 import { BrandTab } from './brand-tab';
-import { HelpButton } from './help-button';
 import { ImagesTab } from './image-tab';
 import { LayersTab } from './layers-tab';
 import { PagesTab } from './page-tab';
@@ -119,7 +118,6 @@ export const DesignPanel = observer(() => {
 
                 <div className="mt-auto flex flex-col gap-0 items-center mb-4">
                     <ZoomControls />
-                    <HelpButton />
                 </div>
             </div>
 
